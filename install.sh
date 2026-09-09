@@ -26,7 +26,21 @@ if [[ "$(uname)" != "Darwin" ]]; then
     exit 1
 fi
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+
+# If running via `curl ... | bash`, download the latest app bundle automatically
+if [[ ! -d "$DIR/OpenGrammarly.app" ]]; then
+    echo -e "${YELLOW}⚡ Downloading OpenGrammarly app package from GitHub...${NC}"
+    STAGE_DIR=$(mktemp -d)
+    if command -v git &>/dev/null; then
+        git clone --depth 1 https://github.com/SamiAbar30/OpenGrammarly.git "$STAGE_DIR/OpenGrammarly"
+        DIR="$STAGE_DIR/OpenGrammarly"
+    else
+        curl -fsSL https://github.com/SamiAbar30/OpenGrammarly/archive/refs/heads/main.zip -o "$STAGE_DIR/main.zip"
+        unzip -q "$STAGE_DIR/main.zip" -d "$STAGE_DIR"
+        DIR="$STAGE_DIR/OpenGrammarly-main"
+    fi
+fi
 
 # Step 1: Ensure Homebrew is installed
 echo -e "${BLUE}[1/6] Checking Homebrew...${NC}"
@@ -106,13 +120,24 @@ echo -e "${BLUE}[5/6] Installing OpenGrammarly.app to /Applications...${NC}"
 if [[ -d "$DIR/OpenGrammarly.app" ]]; then
     rm -rf /Applications/OpenGrammarly.app
     cp -R "$DIR/OpenGrammarly.app" /Applications/
+    chmod +x /Applications/OpenGrammarly.app/Contents/MacOS/OpenGrammarly 2>/dev/null || true
+    chmod +x /Applications/OpenGrammarly.app/Contents/Resources/*.sh 2>/dev/null || true
+    chmod +x /Applications/OpenGrammarly.app/Contents/Resources/*.py 2>/dev/null || true
     xattr -cr /Applications/OpenGrammarly.app 2>/dev/null || true
     echo -e "${GREEN}✓ OpenGrammarly.app installed to /Applications.${NC}"
+else
+    echo -e "${RED}❌ Error: OpenGrammarly.app not found in $DIR.${NC}"
+    exit 1
 fi
 
 # Step 6: Launch and Finish
 echo -e "${BLUE}[6/6] Launching OpenGrammarly...${NC}"
-open /Applications/OpenGrammarly.app
+if [[ -d "/Applications/OpenGrammarly.app" ]]; then
+    open /Applications/OpenGrammarly.app
+else
+    echo -e "${RED}❌ Error: /Applications/OpenGrammarly.app was not found.${NC}"
+    exit 1
+fi
 
 echo ""
 echo -e "${GREEN}${BOLD}🎉 Installation Complete! All systems are online.${NC}"

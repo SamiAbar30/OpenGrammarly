@@ -213,8 +213,69 @@ def enhance_text_rules(text: str, matches: list) -> list:
             "rule": {"id": "WORD_CHOICE", "issueType": "style", "category": {"id": "STYLE", "name": "Style"}}
         })
 
-    # Filter out overlapping matches, preferring longer/more specific fixes
-    enhanced_sorted = sorted(enhanced, key=lambda m: (m["offset"], -m["length"]))
+    # 4. Phonetic & keyboard typos: "how ry you", "ry you", "how r you" -> "are"
+    for m in re.finditer(r'\b(ry|r)\b', text, re.IGNORECASE):
+        word = m.group(1)
+        start = m.start()
+        end = m.end()
+        before = text[:start].rstrip().split()
+        after = text[end:].lstrip().split()
+        prev_word = before[-1].lower().strip("?,.!") if before else ""
+        next_word = after[0].lower().strip("?,.!") if after else ""
+
+        should_fix = False
+        if word.lower() == 'ry':
+            should_fix = True
+        elif word.lower() == 'r':
+            if next_word in {'you', 'u', 'there', 'ok', 'ready', 'sure', 'doing', 'going', 'coming', 'alright'}:
+                should_fix = True
+            elif prev_word in {'how', 'where', 'who', 'what', 'why', 'when', 'we', 'they', 'you'}:
+                should_fix = True
+
+        if should_fix:
+            is_cap = word[0].isupper()
+            rep = "Are" if is_cap else "are"
+            enhanced.append({
+                "message": f'Common typo. Did you mean "{rep}"?',
+                "shortMessage": "Typo",
+                "replacements": [{"value": rep}],
+                "offset": start,
+                "length": end - start,
+                "rule": {"id": "TYPO_RY_ARE", "issueType": "misspelling", "category": {"id": "TYPOS", "name": "Possible Typo"}}
+            })
+
+    # 5. Standalone "u" -> "you" (e.g. "how are u", "thank u")
+    for m in re.finditer(r'\bu\b', text, re.IGNORECASE):
+        word = m.group(0)
+        is_cap = word[0].isupper()
+        rep = "You" if is_cap else "you"
+        enhanced.append({
+            "message": f'Informal shorthand. Did you mean "{rep}"?',
+            "shortMessage": "Informal shorthand",
+            "replacements": [{"value": rep}],
+            "offset": m.start(),
+            "length": 1,
+            "rule": {"id": "SHORT_U_YOU", "issueType": "style", "category": {"id": "STYLE", "name": "Style"}}
+        })
+
+    # 6. Space before punctuation (e.g. "you ?" -> "you?", "hello !" -> "hello!")
+    for m in re.finditer(r'(\w+)(\s+)([?!])', text):
+        enhanced.append({
+            "message": f'Remove space before "{m.group(3)}".',
+            "shortMessage": "Punctuation spacing",
+            "replacements": [{"value": m.group(3)}],
+            "offset": m.start(2),
+            "length": len(m.group(2)) + 1,
+            "rule": {"id": "SPACE_BEFORE_PUNCT", "issueType": "typographical", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
+        })
+
+    # Filter out overlapping matches: prioritize specific contextual rules over generic spellcheck
+    def sort_key(m):
+        rule_id = m.get("rule", {}).get("id", "")
+        is_generic_spell = 1 if "MORFOLOGIK" in rule_id else 0
+        return (m["offset"], is_generic_spell, -m["length"])
+
+    enhanced_sorted = sorted(enhanced, key=sort_key)
     filtered = []
     last_end = -1
     for m in enhanced_sorted:

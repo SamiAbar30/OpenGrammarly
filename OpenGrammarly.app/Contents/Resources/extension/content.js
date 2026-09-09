@@ -316,10 +316,80 @@
       }
     }
 
-    // Filter out overlapping matches, preferring longer/more comprehensive fixes
-    // Sort by start asc, then longer length first
+    // 4. Phonetic & keyboard typos: "how ry you", "ry you", "how r you" -> "are"
+    const ryRegex = /\b(ry|r)\b/gi;
+    let mRy;
+    while ((mRy = ryRegex.exec(text)) !== null) {
+      const word = mRy[1];
+      const start = mRy.index;
+      const end = start + word.length;
+      const before = text.substring(0, start).trim().split(/\s+/);
+      const after = text.substring(end).trim().split(/\s+/);
+      const prevWord = before.length > 0 ? before[before.length - 1].toLowerCase().replace(/[?,.!]/g, "") : "";
+      const nextWord = after.length > 0 ? after[0].toLowerCase().replace(/[?,.!]/g, "") : "";
+
+      let shouldFix = false;
+      if (word.toLowerCase() === "ry") {
+        shouldFix = true;
+      } else if (word.toLowerCase() === "r") {
+        const triggerNext = new Set(["you", "u", "there", "ok", "ready", "sure", "doing", "going", "coming", "alright"]);
+        const triggerPrev = new Set(["how", "where", "who", "what", "why", "when", "we", "they", "you"]);
+        if (triggerNext.has(nextWord) || triggerPrev.has(prevWord)) {
+          shouldFix = true;
+        }
+      }
+
+      if (shouldFix) {
+        const isCap = word[0] === word[0].toUpperCase() && word[0] !== word[0].toLowerCase();
+        const rep = isCap ? "Are" : "are";
+        enhanced.push({
+          message: `Common typo. Did you mean "${rep}"?`,
+          shortMessage: "Typo",
+          replacements: [{ value: rep }],
+          offset: start,
+          length: word.length,
+          rule: { id: "TYPO_RY_ARE", issueType: "misspelling" },
+        });
+      }
+    }
+
+    // 5. Standalone "u" -> "you" (e.g. "how are u", "thank u")
+    const uRegex = /\bu\b/gi;
+    let mU;
+    while ((mU = uRegex.exec(text)) !== null) {
+      const word = mU[0];
+      const isCap = word === "U";
+      const rep = isCap ? "You" : "you";
+      enhanced.push({
+        message: `Informal shorthand. Did you mean "${rep}"?`,
+        shortMessage: "Informal shorthand",
+        replacements: [{ value: rep }],
+        offset: mU.index,
+        length: 1,
+        rule: { id: "SHORT_U_YOU", issueType: "style" },
+      });
+    }
+
+    // 6. Space before punctuation (e.g. "you ?" -> "you?", "hello !" -> "hello!")
+    const spacePunctRegex = /(\w+)(\s+)([?!])/g;
+    let mSp;
+    while ((mSp = spacePunctRegex.exec(text)) !== null) {
+      enhanced.push({
+        message: `Remove space before "${mSp[3]}".`,
+        shortMessage: "Punctuation spacing",
+        replacements: [{ value: mSp[3] }],
+        offset: mSp.index + mSp[1].length,
+        length: mSp[2].length + 1,
+        rule: { id: "SPACE_BEFORE_PUNCT", issueType: "typographical" },
+      });
+    }
+
+    // Filter out overlapping matches: prioritize specific contextual rules over generic spellcheck
     enhanced.sort((a, b) => {
       if (a.offset !== b.offset) return a.offset - b.offset;
+      const aIsGeneric = a.rule && a.rule.id && a.rule.id.includes("MORFOLOGIK") ? 1 : 0;
+      const bIsGeneric = b.rule && b.rule.id && b.rule.id.includes("MORFOLOGIK") ? 1 : 0;
+      if (aIsGeneric !== bIsGeneric) return aIsGeneric - bIsGeneric;
       return b.length - a.length;
     });
 

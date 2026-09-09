@@ -69,17 +69,17 @@
   function getElementText(el) {
     if (!el) return "";
     let val = el.isContentEditable ? (el.innerText || el.textContent || "") : (el.value || "");
-    // Strip trailing single newline automatically added by browsers for contenteditable <p> blocks
-    return val.replace(/\r?\n$/, "");
+    // Strip zero-width spaces/BOM and trailing single newline automatically added by browsers
+    return val.replace(/[\uFEFF\u200B]/g, "").replace(/\r?\n$/, "");
   }
 
   // Robust string replacer for single fixes: replaces m.wrong with replacement without offset errors
   function computeSingleFixText(currentText, m, replacement) {
     const wrongLen = m.length;
-    // 1. Check if m.wrong at m.offset matches
+    // 1. Check if m.wrong or candidate at m.offset matches
     if (m.offset >= 0 && m.offset + wrongLen <= currentText.length) {
       const candidate = currentText.substring(m.offset, m.offset + wrongLen);
-      if (m.wrong && candidate.toLowerCase() === m.wrong.toLowerCase()) {
+      if (!m.wrong || candidate.toLowerCase() === m.wrong.toLowerCase()) {
         return currentText.substring(0, m.offset) + replacement + currentText.substring(m.offset + wrongLen);
       }
     }
@@ -118,80 +118,83 @@
       setTimeout(() => {
         isFixing = false;
         if (callback) callback();
-      }, 80);
+      }, 100);
       return;
     }
 
     // Case 2: ContentEditable (WhatsApp Web Lexical, Slack, Notion, Gmail, etc.)
     el.focus();
 
-    // 1. Collect all non-empty text nodes inside the editable element
-    const textNodes = [];
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
-    let node;
-    while ((node = walker.nextNode())) {
-      if (node.nodeValue !== null) {
-        textNodes.push(node);
-      }
-    }
-
-    // 2. Select from start of first text node to end of last text node
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    const range = document.createRange();
-
-    if (textNodes.length > 0) {
-      const first = textNodes[0];
-      const last = textNodes[textNodes.length - 1];
-      range.setStart(first, 0);
-      range.setEnd(last, last.nodeValue ? last.nodeValue.length : 0);
-    } else {
-      range.selectNodeContents(el);
-    }
-    sel.addRange(range);
-    document.dispatchEvent(new Event("selectionchange"));
-
-    // 3. Atomically replace selection using execCommand("insertText") - NEVER call delete first!
-    let replaced = false;
+    // 1. First, select all contents natively and via DOM Range
     try {
-      replaced = document.execCommand("insertText", false, cleanText);
-    } catch (e) {
-      replaced = false;
+      document.execCommand("selectAll", false, null);
+    } catch (e) {}
+
+    const sel = window.getSelection();
+    if (sel) {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (e) {}
     }
 
-    // 4. Verification: Check if editor content was properly replaced or if Lexical/editor needs direct node sync
-    const currentVal = getElementText(el);
-    if (currentVal !== cleanText) {
-      console.warn("[OpenGrammarly] Syncing contenteditable text directly:", cleanText);
-      if (textNodes.length > 0) {
-        textNodes[0].nodeValue = cleanText;
-        for (let i = 1; i < textNodes.length; i++) {
-          textNodes[i].nodeValue = "";
-        }
+    // 2. Clear selected content completely (crucial: avoids appending text in Lexical/WhatsApp)
+    try {
+      document.execCommand("delete", false, null);
+    } catch (e) {}
+
+    // 3. Insert the clean replacement text into the cleared editor
+    let inserted = false;
+    try {
+      inserted = document.execCommand("insertText", false, cleanText);
+    } catch (e) {
+      inserted = false;
+    }
+
+    // 4. If execCommand insertText did not populate text, try simulated paste (Lexical clipboard fallback)
+    let currentVal = getElementText(el);
+    if (!inserted || currentVal.trim() !== cleanText.trim()) {
+      try {
+        const dt = new DataTransfer();
+        dt.setData("text/plain", cleanText);
+        el.dispatchEvent(
+          new ClipboardEvent("paste", {
+            clipboardData: dt,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      } catch (e) {}
+    }
+
+    // 5. Final fallback: direct DOM node update if editor is still not synced
+    currentVal = getElementText(el);
+    if (currentVal.trim() !== cleanText.trim()) {
+      const lexicalSpan = el.querySelector('[data-lexical-text="true"]');
+      if (lexicalSpan) {
+        lexicalSpan.textContent = cleanText;
       } else {
         el.innerText = cleanText;
       }
     }
 
-    // 5. Position cursor cleanly at the end of the new text
-    try {
-      const finalRange = document.createRange();
-      finalRange.selectNodeContents(el);
-      finalRange.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(finalRange);
-    } catch (e) {}
+    // 6. Ensure cursor is positioned at the end of the new text
+    if (sel) {
+      try {
+        const finalRange = document.createRange();
+        finalRange.selectNodeContents(el);
+        finalRange.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(finalRange);
+      } catch (e) {}
+    }
 
-    // 6. Notify framework of input change
+    // 7. Fire standard input & change events for WhatsApp / React form state
+    // CRITICAL: NEVER dispatch new InputEvent("input", { inputType: "insertText" })
+    // because that causes Meta Lexical to insert the text a second time!
     try {
-      el.dispatchEvent(
-        new InputEvent("input", {
-          bubbles: true,
-          cancelable: true,
-          inputType: "insertText",
-          data: cleanText,
-        })
-      );
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     } catch (e) {}
@@ -199,7 +202,7 @@
     setTimeout(() => {
       isFixing = false;
       if (callback) callback();
-    }, 120);
+    }, 200);
   }
 
   function updateBadgePosition() {
@@ -274,10 +277,11 @@
       } else {
         const mGreeting = text.match(/\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)/i);
         if (mGreeting && !text.substring(mGreeting.index).startsWith(mGreeting[1] + ",")) {
+          const g = mGreeting[1].charAt(0).toUpperCase() + mGreeting[1].slice(1).toLowerCase();
           enhanced.push({
-            message: `Add a comma after the greeting "${mGreeting[1]}".`,
+            message: `Add a comma after the greeting "${g}".`,
             shortMessage: "Missing comma",
-            replacements: [{ value: `${mGreeting[1]}, ${mGreeting[2]}` }],
+            replacements: [{ value: `${g}, ${mGreeting[2]}` }],
             offset: mGreeting.index,
             length: mGreeting[0].length,
             rule: { id: "GREETING_COMMA", issueType: "grammar" },
@@ -316,19 +320,25 @@
       }
     }
 
-    // De-duplicate matches by offset & length
-    const seen = new Set();
-    const deduped = [];
+    // Filter out overlapping matches, preferring longer/more comprehensive fixes
+    // Sort by start asc, then longer length first
+    enhanced.sort((a, b) => {
+      if (a.offset !== b.offset) return a.offset - b.offset;
+      return b.length - a.length;
+    });
+
+    const filtered = [];
+    let lastEnd = -1;
     for (const m of enhanced) {
-      const key = `${m.offset}-${m.length}-${m.rule ? m.rule.id : ""}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        deduped.push(m);
+      if (m.offset >= lastEnd) {
+        filtered.push(m);
+        lastEnd = m.offset + m.length;
       }
     }
 
-    deduped.sort((a, b) => b.offset - a.offset);
-    return deduped;
+    // Sort descending by offset for safe right-to-left processing
+    filtered.sort((a, b) => b.offset - a.offset);
+    return filtered;
   }
 
   function checkActiveText() {
@@ -574,12 +584,14 @@
   });
 
   const triggerFastCheck = (el) => {
+    if (isFixing) return;
     activeElement = el;
     updateBadgePosition();
     clearTimeout(checkTimeout);
     checkTimeout = setTimeout(() => {
+      if (isFixing) return;
       checkActiveText();
-    }, 150); // Rapid 150ms debounce
+    }, 180);
   };
 
   // Capture typing events across all inputs and contenteditable frameworks (WhatsApp, Slack, Notion)

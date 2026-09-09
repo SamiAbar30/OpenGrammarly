@@ -178,7 +178,7 @@ def enhance_text_rules(text: str, matches: list) -> list:
     else:
         m_greeting = re.search(r'\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)', text, re.IGNORECASE)
         if m_greeting and not text[m_greeting.start():].startswith(m_greeting.group(1) + ","):
-            g = m_greeting.group(1)
+            g = m_greeting.group(1).capitalize()
             w = m_greeting.group(2)
             enhanced.append({
                 "message": f'Add a comma after the greeting "{g}".',
@@ -213,8 +213,17 @@ def enhance_text_rules(text: str, matches: list) -> list:
             "rule": {"id": "WORD_CHOICE", "issueType": "style", "category": {"id": "STYLE", "name": "Style"}}
         })
 
-    enhanced.sort(key=lambda m: m["offset"])
-    return enhanced
+    # Filter out overlapping matches, preferring longer/more specific fixes
+    enhanced_sorted = sorted(enhanced, key=lambda m: (m["offset"], -m["length"]))
+    filtered = []
+    last_end = -1
+    for m in enhanced_sorted:
+        if m["offset"] >= last_end:
+            filtered.append(m)
+            last_end = m["offset"] + m["length"]
+
+    filtered.sort(key=lambda m: m["offset"])
+    return filtered
 
 
 def check_grammar(text: str, language: str = "en-US") -> list:

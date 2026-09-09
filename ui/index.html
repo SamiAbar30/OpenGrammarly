@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrammarlyLocal</title>
+  <style>
+    :root {
+      --bg-canvas: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #283548;
+      --bg-hover: #334155;
+      --border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --brand: #10b981;
+      --brand-hover: #059669;
+      --err-grammar: #3b82f6;
+      --err-spelling: #f43f5e;
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    /* Top Bar */
+    header {
+      height: 60px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.3px;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-select {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn-extension {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-extension:hover {
+      background: var(--bg-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-fix-active {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      padding: 7px 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+    }
+    .btn-fix-active:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Header Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      gap: 4px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .nav-tab.active {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .nav-offline-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* View Panels */
+    .view-panel {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* Main Workspace */
+    .workspace {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* 🌐 DeepL Translation Workspace */
+    .translate-workspace {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      background: var(--bg-canvas);
+      padding: 24px 32px;
+      gap: 16px;
+      align-items: stretch;
+      justify-content: center;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .translate-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .translate-box:focus-within {
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+
+    .translate-box-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .lang-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-select-deepl {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .detected-pill {
+      font-size: 11px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .translate-box-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .translate-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    .btn-swap-langs {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-swap-langs:hover {
+      background: var(--bg-hover);
+      border-color: #3b82f6;
+      color: #60a5fa;
+      transform: scale(1.08) rotate(180deg);
+    }
+
+    .translate-textarea-wrapper {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .translate-textarea-wrapper textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--text-main);
+      font-family: var(--font-family);
+      resize: none;
+    }
+
+    .translate-textarea-wrapper textarea::placeholder {
+      color: #475569;
+    }
+
+    .translate-box-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.015);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .engine-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .translation-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #10b981;
+      font-weight: 500;
+    }
+
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+    }
+
+    .translate-spinner {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #60a5fa;
+      font-weight: 500;
+    }
+
+    .spinner-dot {
+      width: 8px;
+      height: 8px;
+      border: 2px solid #60a5fa;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Editor Side */
+    .editor-section {
+      flex: 1.25;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--bg-canvas);
+    }
+
+    .editor-toolbar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .editor-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .btn-autofix {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s ease;
+    }
+    .btn-autofix:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    }
+
+    .editor-container {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #editor {
+      width: 100%;
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--text-main);
+      font-family: var(--font-family);
+      resize: none;
+    }
+
+    .editor-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--brand);
+    }
+
+    /* Assistant / Cards Side */
+    .assistant-section {
+      flex: 0.95;
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .assistant-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .assistant-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .cards-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Suggestion Card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .category-chip {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .cat-spelling {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .cat-grammar {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .error-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .error-word {
+      color: #fb7185;
+      text-decoration: line-through;
+    }
+    .arrow {
+      color: var(--text-muted);
+    }
+    .fix-word {
+      color: #34d399;
+    }
+
+    .card-message {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-apply-fix {
+      background: var(--brand);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-apply-fix:hover {
+      background: var(--brand-hover);
+    }
+
+    .btn-dismiss {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .btn-dismiss:hover {
+      color: var(--text-main);
+      background: var(--bg-hover);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 40px;
+    }
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .empty-desc {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 28px;
+      width: 480px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .step-item {
+      background: #283548;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .step-content p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-modal-primary:hover {
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <img src="logo.png" alt="GrammarlyLocal Logo">
+      <span>GrammarlyLocal</span>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="server-status">All Systems Online</span>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tab-btn-grammar">
+        <span>✍️ Grammar & Style</span>
+      </button>
+      <button class="nav-tab" id="tab-btn-translate">
+        <span>🌐 DeepL Translator</span>
+        <span class="nav-offline-pill">100% Offline</span>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <select class="lang-select" id="lang-select">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="de-DE">German (DE)</option>
+        <option value="fr">French (FR)</option>
+        <option value="es">Spanish (ES)</option>
+      </select>
+
+      <button class="btn-extension" id="btn-show-extension" title="Add floating widget to Chrome / Brave / Edge">
+        <span>🧩 Chrome Extension</span>
+      </button>
+
+      <button class="btn-fix-active" id="btn-fix-active" title="Auto-fix selected text in Safari, Chrome, Notes, Slack...">
+        <span>🎯 Fix Active App (⌘⇧G)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Grammar & Style View -->
+  <div id="view-grammar" class="view-panel">
+    <div class="workspace">
+      <!-- Left: Rich Text Editor -->
+      <div class="editor-section">
+        <div class="editor-toolbar">
+          <div class="editor-tools">
+            <button class="tool-btn" id="btn-paste">📋 Paste</button>
+            <button class="tool-btn" id="btn-copy">📑 Copy</button>
+            <button class="tool-btn" id="btn-clear">🗑️ Clear</button>
+          </div>
+
+          <button class="btn-autofix" id="btn-autofix">
+            <span>⚡ Auto-Fix All</span>
+          </button>
+        </div>
+
+        <div class="editor-container">
+          <textarea id="editor" placeholder="Type or paste any text here to instantly detect mistakes..." spellcheck="false">This are an example sentence with a grammatical mistake.
+LanguageTool can easily finds errors in spelling, grammer, and punctuation.
+Their is no doubt that this tool is very helpfull.</textarea>
+        </div>
+
+        <div class="editor-footer">
+          <div style="display: flex; gap: 16px;">
+            <span id="stat-words">0 words</span>
+            <span id="stat-chars">0 characters</span>
+          </div>
+          <div class="score-badge">
+            <span>Overall Score:</span>
+            <span id="score-val">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Grammarly Suggestions Sidebar -->
+      <div class="assistant-section">
+        <div class="assistant-header">
+          <div class="assistant-title" id="assistant-count">Suggestions (0)</div>
+        </div>
+
+        <div class="cards-container" id="cards-container">
+          <!-- Suggestion Cards injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DeepL Translator View -->
+  <div id="view-translate" class="view-panel" style="display: none;">
+    <div class="translate-workspace">
+      <!-- Left: Source Box -->
+      <div class="translate-box source-box">
+        <div class="translate-box-header">
+          <div class="lang-selector-group">
+            <select id="source-lang-select" class="lang-select-deepl">
+              <option value="auto">Detect Language</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ar">Arabic</option>
+            </select>
+            <span id="detected-lang-pill" class="detected-pill" style="display: none;">Detected: English</span>
+          </div>
+          <div class="translate-box-tools">
+            <button class="tool-btn" id="btn-trans-paste" title="Paste clipboard text">📋 Paste</button>
+            <button class="tool-btn" id="btn-trans-clear" title="Clear text">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <div class="translate-textarea-wrapper">
+          <textarea id="translate-source" placeholder="Type or paste any text to translate 100% offline..." spellcheck="false">Hello! Welcome to GrammarlyLocal offline translator. Everything is processed 100% privately on your Mac.</textarea>
+        </div>
+
+        <div class="translate-box-footer">
+          <span id="source-char-count">0 characters</span>
+          <span class="engine-badge">⚡ Argos Neural Model (CTranslate2)</span>
+        </div>
+      </div>
+
+      <!-- Center: Swap Languages -->
+      <div class="translate-divider">
+        <button class="btn-swap-langs" id="btn-swap-langs" title="Swap languages">⇄</button>
+      </div>
+
+      <!-- Right: Target Box -->
+      <div class="translate-box target-box">
+        <div class="translate-box-header">
+          <div class="lang-selector-group">
+            <select id="target-lang-select" class="lang-select-deepl">
+              <option value="es">Spanish</option>
+              <option value="en">English</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </div>
+          <div class="translate-box-tools">
+            <button class="tool-btn" id="btn-trans-copy" title="Copy translated text">📑 Copy</button>
+            <button class="btn-fix-active" id="btn-trans-send-active" title="Paste translation directly into WhatsApp, Slack, Notes, etc.">
+              <span>🎯 Paste to Active App</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="translate-textarea-wrapper">
+          <textarea id="translate-target" placeholder="Translation will appear here instantly..." readonly></textarea>
+          <div id="translate-loading" class="translate-spinner" style="display: none;">
+            <div class="spinner-dot"></div>
+            <span>Translating offline...</span>
+          </div>
+        </div>
+
+        <div class="translate-box-footer">
+          <span id="target-char-count">0 characters</span>
+          <div class="translation-meta" id="translation-meta">
+            <span class="status-indicator-dot"></span>
+            <span id="translation-speed-label">Ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Permissions Modal -->
+  <div class="modal-overlay" id="permissions-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ 1-Click Setup: Enable Accessibility</div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+        To allow GrammarlyLocal to automatically detect text and auto-replace mistakes across <strong>Chrome, Safari, Slack, Notes, and Word</strong>, macOS requires one-time permission.
+      </p>
+
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Open Accessibility Settings</h4>
+          <p>Click below to reveal macOS System Settings directly.</p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Turn On GrammarlyLocal</h4>
+          <p>Toggle the switch next to <strong>GrammarlyLocal</strong> (or Terminal/Python) to ON.</p>
+        </div>
+      </div>
+
+      <button class="btn-modal-primary" id="btn-request-perms">⚙️ Open System Settings Now</button>
+      <button class="tool-btn" id="btn-dismiss-perms" style="margin-top: -6px;">Continue with App Only</button>
+    </div>
+  </div>
+
+  <!-- Browser Extension Modal -->
+  <div class="modal-overlay" id="extension-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🧩 Browser Extension Setup</div>
+        <button class="modal-close" id="btn-close-ext-modal">✕</button>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+        Add the native floating Grammarly bubble to <strong>Google Chrome, Brave, or Edge</strong> to get live wavy underlines across all websites (Gmail, Google Docs, Twitter, Notion).
+      </p>
+
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Open Extensions Page</h4>
+          <p>Open <code>chrome://extensions</code> in your browser and turn on <strong>Developer mode</strong> (top-right corner).</p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Load Unpacked</h4>
+          <p>Click <strong>Load unpacked</strong>, then choose the bundled <code>extension</code> folder revealed below.</p>
+        </div>
+      </div>
+
+      <button class="btn-modal-primary" id="btn-reveal-extension">📂 Reveal Extension Folder in Finder</button>
+    </div>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const cardsContainer = document.getElementById('cards-container');
+    const assistantCount = document.getElementById('assistant-count');
+    const langSelect = document.getElementById('lang-select');
+    const statWords = document.getElementById('stat-words');
+    const statChars = document.getElementById('stat-chars');
+    const scoreVal = document.getElementById('score-val');
+
+    const permsModal = document.getElementById('permissions-modal');
+    const extModal = document.getElementById('extension-modal');
+
+    let currentMatches = [];
+    let checkTimeout = null;
+
+    // Check system permissions and auto-dismiss modal when granted
+    async function checkPermissionsStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        if (!data.accessibility_trusted) {
+          // Show onboarding modal if not granted
+          if (!sessionStorage.getItem('perms_dismissed')) {
+            permsModal.style.display = 'flex';
+          }
+        } else {
+          permsModal.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+
+    document.getElementById('btn-request-perms').addEventListener('click', async () => {
+      await fetch('/api/permissions/request', { method: 'POST' });
+    });
+
+    document.getElementById('btn-dismiss-perms').addEventListener('click', () => {
+      permsModal.style.display = 'none';
+      sessionStorage.setItem('perms_dismissed', '1');
+    });
+
+    // Extension modal
+    document.getElementById('btn-show-extension').addEventListener('click', () => {
+      extModal.style.display = 'flex';
+    });
+    document.getElementById('btn-close-ext-modal').addEventListener('click', () => {
+      extModal.style.display = 'none';
+    });
+    document.getElementById('btn-reveal-extension').addEventListener('click', async () => {
+      await fetch('/api/open_extension_folder', { method: 'POST' });
+    });
+
+    // Debounced text check on EVERY input
+    editor.addEventListener('input', () => {
+      updateStats();
+      clearTimeout(checkTimeout);
+      checkTimeout = setTimeout(() => runGrammarCheck(), 250);
+    });
+
+    langSelect.addEventListener('change', () => {
+      runGrammarCheck();
+    });
+
+    function updateStats() {
+      const text = editor.value || "";
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      statWords.innerText = `${words} words`;
+      statChars.innerText = `${text.length} characters`;
+    }
+
+    async function runGrammarCheck() {
+      const text = editor.value || "";
+      if (!text.trim()) {
+        renderCards([]);
+        scoreVal.innerText = "100/100";
+        return;
+      }
+
+      const lang = langSelect.value;
+      try {
+        const res = await fetch('/api/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, language: lang })
+        });
+        const data = await res.json();
+        currentMatches = data.matches || [];
+        renderCards(currentMatches);
+
+        const deductions = Math.min(currentMatches.length * 8, 75);
+        scoreVal.innerText = `${100 - deductions}/100`;
+      } catch (err) {
+        console.error("Grammar check failed:", err);
+      }
+    }
+
+    function renderCards(matches) {
+      cardsContainer.innerHTML = "";
+      assistantCount.innerText = `Suggestions (${matches.length})`;
+
+      if (matches.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🎉</div>
+            <div class="empty-title">All clear!</div>
+            <div class="empty-desc">No spelling or grammatical mistakes detected in your text.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const text = editor.value || "";
+
+      matches.forEach((m) => {
+        const offset = m.offset;
+        const len = m.length;
+        const errWord = text.substring(offset, offset + len);
+        const bestFix = (m.replacements && m.replacements[0]) ? m.replacements[0].value : "";
+        const issueType = m.rule && m.rule.issueType === "misspelling" ? "Spelling" : "Grammar";
+        const catClass = issueType === "Spelling" ? "cat-spelling" : "cat-grammar";
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="category-chip ${catClass}">${issueType}</span>
+            <span style="font-size: 11px; color: var(--text-muted);">${m.rule.id}</span>
+          </div>
+
+          <div class="error-preview">
+            <span class="error-word">"${errWord}"</span>
+            <span class="arrow">→</span>
+            <span class="fix-word">${bestFix || "Remove"}</span>
+          </div>
+
+          <div class="card-message">${m.message}</div>
+
+          <div class="card-actions">
+            ${bestFix ? `<button class="btn-apply-fix" onclick="applySingleFix(${offset}, ${len}, '${bestFix.replace(/'/g, "\\'")}')">Fix with "${bestFix}"</button>` : ''}
+            <button class="btn-dismiss" onclick="dismissCard(this)">Dismiss</button>
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    window.applySingleFix = function(offset, length, replacement) {
+      const text = editor.value || "";
+      const newText = text.substring(0, offset) + replacement + text.substring(offset + length);
+      editor.value = newText;
+      updateStats();
+      runGrammarCheck();
+    };
+
+    window.dismissCard = function(btn) {
+      const card = btn.closest('.card');
+      if (card) card.remove();
+      const remaining = cardsContainer.querySelectorAll('.card').length;
+      assistantCount.innerText = `Suggestions (${remaining})`;
+    };
+
+    // Auto-fix All button
+    document.getElementById('btn-autofix').addEventListener('click', async () => {
+      let text = editor.value || "";
+      try {
+        const res = await fetch('/api/autofix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, language: langSelect.value })
+        });
+        const data = await res.json();
+        editor.value = data.fixed || text;
+        updateStats();
+        runGrammarCheck();
+      } catch (e) {
+        console.error("Auto-fix failed:", e);
+      }
+    });
+
+    // Fix Active App button
+    document.getElementById('btn-fix-active').addEventListener('click', async () => {
+      await fetch('/api/fix_active_app', { method: 'POST' });
+    });
+
+    // Toolbar buttons
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(editor.value);
+    });
+
+    document.getElementById('btn-paste').addEventListener('click', async () => {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (clip) {
+          editor.value = clip;
+          updateStats();
+          runGrammarCheck();
+        }
+      } catch (e) {
+        editor.focus();
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      editor.value = "";
+      updateStats();
+      runGrammarCheck();
+    });
+
+    // ==========================================
+    // 🌐 DEEPL TRANSLATOR INTERFACE LOGIC
+    // ==========================================
+    const tabBtnGrammar = document.getElementById('tab-btn-grammar');
+    const tabBtnTranslate = document.getElementById('tab-btn-translate');
+    const viewGrammar = document.getElementById('view-grammar');
+    const viewTranslate = document.getElementById('view-translate');
+
+    const transSource = document.getElementById('translate-source');
+    const transTarget = document.getElementById('translate-target');
+    const sourceLangSelect = document.getElementById('source-lang-select');
+    const targetLangSelect = document.getElementById('target-lang-select');
+    const detectedLangPill = document.getElementById('detected-lang-pill');
+    const sourceCharCount = document.getElementById('source-char-count');
+    const targetCharCount = document.getElementById('target-char-count');
+    const transLoading = document.getElementById('translate-loading');
+    const transSpeedLabel = document.getElementById('translation-speed-label');
+
+    let transTimeout = null;
+
+    function switchTab(activeTab) {
+      if (activeTab === 'grammar') {
+        tabBtnGrammar.classList.add('active');
+        tabBtnTranslate.classList.remove('active');
+        viewGrammar.style.display = 'flex';
+        viewTranslate.style.display = 'none';
+        langSelect.style.display = 'block';
+        editor.focus();
+      } else {
+        tabBtnGrammar.classList.remove('active');
+        tabBtnTranslate.classList.add('active');
+        viewGrammar.style.display = 'none';
+        viewTranslate.style.display = 'flex';
+        langSelect.style.display = 'none';
+        transSource.focus();
+        runTranslation();
+      }
+    }
+
+    tabBtnGrammar.addEventListener('click', () => switchTab('grammar'));
+    tabBtnTranslate.addEventListener('click', () => switchTab('translate'));
+
+    function updateTranslateCounts() {
+      const srcLen = (transSource.value || "").length;
+      const tgtLen = (transTarget.value || "").length;
+      sourceCharCount.innerText = `${srcLen} characters`;
+      targetCharCount.innerText = `${tgtLen} characters`;
+    }
+
+    async function runTranslation() {
+      const text = transSource.value || "";
+      updateTranslateCounts();
+
+      if (!text.trim()) {
+        transTarget.value = "";
+        detectedLangPill.style.display = 'none';
+        transSpeedLabel.innerText = "Ready";
+        return;
+      }
+
+      transLoading.style.display = 'flex';
+      const startTime = performance.now();
+
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            from: sourceLangSelect.value,
+            to: targetLangSelect.value
+          })
+        });
+        const data = await res.json();
+        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+        transTarget.value = data.translated || "";
+        updateTranslateCounts();
+
+        if (sourceLangSelect.value === 'auto' && data.detected) {
+          detectedLangPill.innerText = `Detected: ${data.detected.toUpperCase()}`;
+          detectedLangPill.style.display = 'inline-block';
+        } else {
+          detectedLangPill.style.display = 'none';
+        }
+
+        transSpeedLabel.innerText = `Translated in ${duration}s (100% offline)`;
+      } catch (err) {
+        console.error("Translation error:", err);
+        transSpeedLabel.innerText = "Translation error";
+      } finally {
+        transLoading.style.display = 'none';
+      }
+    }
+
+    transSource.addEventListener('input', () => {
+      clearTimeout(transTimeout);
+      transTimeout = setTimeout(() => runTranslation(), 250);
+    });
+
+    sourceLangSelect.addEventListener('change', () => runTranslation());
+    targetLangSelect.addEventListener('change', () => runTranslation());
+
+    // Swap Languages button
+    document.getElementById('btn-swap-langs').addEventListener('click', () => {
+      const currentSrc = sourceLangSelect.value;
+      const currentTgt = targetLangSelect.value;
+
+      if (currentSrc !== 'auto') {
+        sourceLangSelect.value = currentTgt;
+        targetLangSelect.value = currentSrc;
+      } else {
+        sourceLangSelect.value = currentTgt;
+        targetLangSelect.value = 'en';
+      }
+
+      const tempText = transSource.value;
+      transSource.value = transTarget.value;
+      transTarget.value = tempText;
+
+      runTranslation();
+    });
+
+    // Copy Translation
+    document.getElementById('btn-trans-copy').addEventListener('click', (e) => {
+      if (transTarget.value) {
+        navigator.clipboard.writeText(transTarget.value);
+        const originalText = e.target.innerText;
+        e.target.innerText = "✓ Copied!";
+        setTimeout(() => { e.target.innerText = originalText; }, 1500);
+      }
+    });
+
+    // Paste source text
+    document.getElementById('btn-trans-paste').addEventListener('click', async () => {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (clip) {
+          transSource.value = clip;
+          runTranslation();
+        }
+      } catch (e) {
+        transSource.focus();
+      }
+    });
+
+    // Clear translation source
+    document.getElementById('btn-trans-clear').addEventListener('click', () => {
+      transSource.value = "";
+      transTarget.value = "";
+      updateTranslateCounts();
+      detectedLangPill.style.display = 'none';
+      transSpeedLabel.innerText = "Ready";
+      transSource.focus();
+    });
+
+    // Paste to Active App button (sends to whatever app is underneath, e.g. WhatsApp, Slack, Notes)
+    document.getElementById('btn-trans-send-active').addEventListener('click', async () => {
+      if (!transTarget.value) return;
+      await fetch('/api/paste_text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: transTarget.value })
+      });
+    });
+
+    // Initial load & periodic permission polling
+    window.addEventListener('DOMContentLoaded', () => {
+      updateStats();
+      checkPermissionsStatus();
+      runGrammarCheck();
+      setInterval(checkPermissionsStatus, 2000);
+    });
+  </script>
+</body>
+</html>

@@ -69,8 +69,8 @@ if ! command -v python3 &>/dev/null; then
     brew install python
 fi
 
-echo -e "${YELLOW}⚡ Installing required dependencies (pywebview, argostranslate, ctranslate2)...${NC}"
-python3 -m pip install --quiet --upgrade pywebview argostranslate ctranslate2 torch
+echo -e "${YELLOW}⚡ Installing required dependencies (pywebview, argostranslate, ctranslate2, pynput, pyobjc)...${NC}"
+python3 -m pip install --quiet --upgrade pywebview argostranslate ctranslate2 torch pynput pyobjc-framework-Cocoa pyobjc-framework-Quartz langdetect
 
 # macOS Python SSL certificate check
 CERT_CMD=$(ls /Applications/Python*/Install\ Certificates.command 2>/dev/null | head -n 1 || true)

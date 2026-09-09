@@ -15,8 +15,15 @@
 
 ---
 
-## ⚡ 1-Line Automated Install (Zero Config)
+## ⚡ Fast Access & 1-Click Installation (Zero Config)
 
+### Option 1: 1-Click Drag-and-Drop Installer (Recommended)
+1. Download **`OpenGrammarly.dmg`** from this repository (or from [Releases](https://github.com/SamiAbar30/OpenGrammarly/releases)).
+2. Double-click **`OpenGrammarly.dmg`**.
+3. Drag **OpenGrammarly** into your **Applications** folder.
+4. Launch OpenGrammarly!
+
+### Option 2: 1-Line Automated Terminal Setup
 Open your macOS Terminal and run:
 
 ```bash
@@ -31,18 +38,27 @@ cd OpenGrammarly
 ./install.sh
 ```
 
-### What the installer does automatically:
-- Installs and starts the local **LanguageTool** grammar engine on `localhost:8081`.
-- Sets up Python dependencies (`pywebview`, `argostranslate`, `ctranslate2`, `torch`).
-- Downloads offline neural translation models for **English, Spanish, French, German, Italian, Portuguese, Arabic**.
-- Installs `OpenGrammarly.app` into `/Applications` and launches it.
-- **Zero manual configuration required!**
-
 ---
 
 ## 🌟 Key Features
 
-### 1. ✍️ Native macOS Desktop App
+### 1. 🎛️ macOS Menu Bar / System Tray Fast Access
+- Lives in your top macOS menu bar (`✍️`) just like standard Windows tray apps.
+- Closing the window (red 'X' button) keeps OpenGrammarly running silently in the background.
+- Dropdown menu for instant access:
+  - **Open OpenGrammarly**
+  - **Fix Selected Text (`⌘⌥G` or `⌘⇧G`)**
+  - **DeepL Translator Tab**
+  - **Chrome Extension Folder...**
+  - **Launch on Mac Startup** (toggle auto-start on boot)
+  - **Quit OpenGrammarly**
+
+### 2. ⚡ In-Place Global Hotkey (`⌘⌥G` / `⌘⇧G`)
+- Highlight text in **ANY application** on your Mac (Safari, Chrome, Notes, Word, Slack, WhatsApp, TextEdit).
+- Press **`Command + Option + G`** (or **`Command + Shift + G`**).
+- OpenGrammarly instantly auto-corrects spelling, punctuation, and grammar mistakes directly in place and shows a clean confirmation banner.
+
+### 3. ✍️ Native macOS Desktop App
 - **Grammar & Style Editor**: Real-time mistake detection, spell checking, and one-click **"⚡ Auto-Fix All"**.
 - **🌐 DeepL-Style Dual-Panel Translator**:
   - Automatic source language detection.
@@ -50,14 +66,10 @@ cd OpenGrammarly
   - **`⇄` Swap Languages** & **`📑 1-Click Copy`**.
   - **`🎯 Paste to Active App`**: Translates and pastes directly into whichever app you were working in (WhatsApp, Slack, Notes, Word, etc.).
 
-### 2. 🧩 Browser Extension (WhatsApp Web, Slack, Gmail, Notion)
+### 4. 🧩 Browser Extension (WhatsApp Web, Slack, Gmail, Notion)
 - Native floating widget inside Chromium browsers (**Google Chrome, Brave, Edge**).
 - **1-Click WhatsApp In-Place Fix**: Fixes mistakes or translates entire messages directly inside the WhatsApp Web chat box without duplicating or losing cursor focus.
 - **1-Click In-Page Translation**: Quick target language chips (`[ 🇪🇸 ES ]`, `[ 🇫🇷 FR ]`, `[ 🇩🇪 DE ]`, `[ 🇸🇦 AR ]`, `[ 🇬🇧 EN ]`).
-
-### 3. 🎯 Global System-Wide Shortcut (`⌘ + ⇧ + G`)
-- Highlight text anywhere on macOS (Safari, Pages, Notes, Slack, VS Code).
-- Press your shortcut (or click **"Fix Active App"**) to automatically fix mistakes in place.
 
 ---
 

@@ -28,6 +28,18 @@ try:
 except ImportError:
     translate_engine = None
 
+try:
+    import AppKit
+    import Quartz
+except Exception:
+    AppKit = None
+    Quartz = None
+
+try:
+    from pynput import keyboard
+except Exception:
+    keyboard = None
+
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 UI_DIR = os.path.join(APP_DIR, "ui")
 if not os.path.exists(UI_DIR):
@@ -71,23 +83,61 @@ def is_accessibility_trusted() -> bool:
 
 def request_accessibility_permission():
     try:
-        app_services = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices")
-        core_foundation = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
+        from ApplicationServices import AXIsProcessTrustedWithOptions, kAXTrustedCheckOptionPrompt
+        AXIsProcessTrustedWithOptions({kAXTrustedCheckOptionPrompt: True})
+    except Exception:
+        try:
+            app_services = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices")
+            app_services.AXIsProcessTrustedWithOptions.restype = ctypes.c_bool
+            app_services.AXIsProcessTrustedWithOptions.argtypes = [ctypes.c_void_p]
+            app_services.AXIsProcessTrustedWithOptions(None)
+        except Exception:
+            pass
 
-        app_services.AXIsProcessTrustedWithOptions.restype = ctypes.c_bool
-        app_services.AXIsProcessTrustedWithOptions.argtypes = [ctypes.c_void_p]
+    # Open the Accessibility pane in System Settings directly
+    subprocess.run(["open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"], check=False)
 
-        # Call AppleScript to reveal Accessibility pane in System Settings
-        subprocess.run(
-            [
-                "osascript",
-                "-e",
-                'tell application "System Settings" to reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"',
-            ],
-            check=False,
-        )
+
+# Common word sets for instant, offline language identification
+COMMON_EN = {'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'person', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'hello', 'hi', 'hey', 'im', 'am', 'is', 'are', 'was', 'were', 'been', 'thanks', 'thank', 'please', 'dont', 'cant', 'wont', 'ive', 'youre', 'theyre', 'sami'}
+COMMON_FR = {'le', 'la', 'les', 'un', 'une', 'des', 'bonjour', 'salut', 'merci', 'oui', 'non', 'vous', 'nous', 'ils', 'elles', 'avec', 'pour', 'dans', 'sur', 'est', 'sont', 'cette', 'cet', 'mais', 'donc', 'alors', 'très', 'bien', 'comment', 'quoi', 'où', 'pourquoi', 'être', 'avoir', 'je', 'tu', 'il', 'elle', 'ça', 'va', 'suis', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses'}
+COMMON_ES = {'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'hola', 'gracias', 'buenos', 'días', 'tardes', 'noches', 'qué', 'cómo', 'dónde', 'cuándo', 'por', 'para', 'con', 'pero', 'más', 'este', 'esta', 'esto', 'está', 'son', 'tienen', 'tienes', 'amigo', 'favor', 'usted', 'yo', 'tú', 'él', 'ella', 'nosotros', 'bien'}
+COMMON_DE = {'der', 'die', 'das', 'ein', 'eine', 'hallo', 'guten', 'morgen', 'tag', 'danke', 'bitte', 'und', 'ist', 'sind', 'nicht', 'mit', 'für', 'auf', 'wie', 'was', 'warum', 'ich', 'du', 'er', 'sie', 'wir', 'ihr', 'haben', 'sein', 'werden', 'gut'}
+COMMON_IT = {'ciao', 'grazie', 'buongiorno', 'buonasera', 'per', 'favore', 'come', 'dove', 'quando', 'perché', 'sono', 'siamo', 'hanno', 'questo', 'questa', 'molto'}
+
+
+def detect_language(text: str) -> str:
+    """Detect language offline accurately even on short snippets."""
+    if not text or not text.strip():
+        return "en-US"
+    if re.search(r'[\u0600-\u06FF]', text):
+        return "ar"
+    if re.search(r'[\u0400-\u04FF]', text):
+        return "ru"
+
+    words = set(re.findall(r"[a-zA-Z']+", text.lower()))
+    scores = [
+        ("fr", len(words & COMMON_FR)),
+        ("es", len(words & COMMON_ES)),
+        ("de", len(words & COMMON_DE)),
+        ("it", len(words & COMMON_IT)),
+        ("en-US", len(words & COMMON_EN)),
+    ]
+    scores.sort(key=lambda x: x[1], reverse=True)
+    if scores[0][1] > 0:
+        return scores[0][0]
+
+    # Secondary check with langdetect if installed
+    try:
+        from langdetect import detect as ld_detect
+        detected = ld_detect(text)
+        lang_map = {"en": "en-US", "fr": "fr", "es": "es", "de": "de-DE", "it": "it", "pt": "pt-PT", "ar": "ar"}
+        if detected in lang_map:
+            return lang_map[detected]
     except Exception:
         pass
+
+    return "en-US"
 
 
 def enhance_text_rules(text: str, matches: list) -> list:
@@ -138,6 +188,8 @@ def enhance_text_rules(text: str, matches: list) -> list:
 def check_grammar(text: str, language: str = "en-US") -> list:
     if not text or not text.strip():
         return []
+    if language == "auto" or not language:
+        language = detect_language(text)
     data = urllib.parse.urlencode({"text": text, "language": language}).encode("utf-8")
     req = urllib.request.Request(LT_SERVER_URL, data=data, method="POST")
     try:
@@ -149,8 +201,9 @@ def check_grammar(text: str, language: str = "en-US") -> list:
         return enhance_text_rules(text, [])
 
 
-
 def auto_correct_text(text: str, language: str = "en-US") -> tuple[str, int]:
+    if language == "auto" or not language:
+        language = detect_language(text)
     matches = check_grammar(text, language)
     sorted_matches = sorted(matches, key=lambda m: m["offset"], reverse=True)
     corrected = list(text)
@@ -368,6 +421,252 @@ def _clipboard_monitor():
         time.sleep(0.8)
 
 
+def _simulate_cmd_key(keycode: int):
+    """Simulate Cmd + <key> via Quartz or osascript fallback."""
+    if Quartz:
+        try:
+            ev_down = Quartz.CGEventCreateKeyboardEvent(None, keycode, True)
+            Quartz.CGEventSetFlags(ev_down, Quartz.kCGEventFlagMaskCommand)
+            Quartz.CGEventPost(Quartz.kCGHIDEventTap, ev_down)
+            time.sleep(0.02)
+            ev_up = Quartz.CGEventCreateKeyboardEvent(None, keycode, False)
+            Quartz.CGEventSetFlags(ev_up, Quartz.kCGEventFlagMaskCommand)
+            Quartz.CGEventPost(Quartz.kCGHIDEventTap, ev_up)
+            return
+        except Exception:
+            pass
+
+    key_char = "c" if keycode == 8 else "v"
+    subprocess.run([
+        "osascript", "-e",
+        f'tell application "System Events" to keystroke "{key_char}" using {{command down}}'
+    ], check=False)
+
+
+def fix_active_selection():
+    """
+    Called by Global Hotkey (Cmd+Alt+G / Cmd+Shift+G) or Menu Bar Item.
+    Copies selected text from current frontmost app, auto-fixes mistakes locally,
+    and pastes the corrected text back into the active application.
+    """
+    try:
+        # Give frontmost app focus if triggered from menu bar
+        time.sleep(0.05)
+
+        # 1. Simulate Cmd+C to copy selected text (keycode 8 is 'c')
+        _simulate_cmd_key(8)
+        time.sleep(0.12)
+
+        # 2. Read copied text from pbpaste
+        try:
+            raw_text = subprocess.check_output(["pbpaste"], text=True)
+        except Exception:
+            raw_text = ""
+
+        if not raw_text or not raw_text.strip():
+            subprocess.run([
+                "osascript", "-e",
+                'display notification "💡 Highlight text first, then press ⌘⌥G (or ⌘⇧G) to auto-fix!" with title "OpenGrammarly"'
+            ], check=False)
+            return
+
+        # 3. Auto-correct text using our engine
+        fixed, count = auto_correct_text(raw_text, "auto")
+
+        if count > 0 and fixed != raw_text:
+            # 4. Copy fixed text back to clipboard
+            p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
+            p.communicate(fixed)
+            time.sleep(0.06)
+
+            # 5. Paste back into active window (keycode 9 is 'v')
+            _simulate_cmd_key(9)
+
+            subprocess.run([
+                "osascript", "-e",
+                f'display notification "✨ Auto-fixed {count} error(s) in place!" with title "OpenGrammarly"'
+            ], check=False)
+        else:
+            subprocess.run([
+                "osascript", "-e",
+                'display notification "✨ All clear! No errors found in selection." with title "OpenGrammarly"'
+            ], check=False)
+    except Exception as e:
+        print("[OpenGrammarly] fix_active_selection error:", e)
+
+
+_hotkey_listener = None
+
+def _hotkey_supervisor():
+    """Continuously monitors accessibility permissions and ensures global hotkeys remain active."""
+    global _hotkey_listener
+    if not keyboard:
+        return
+
+    def on_hotkey():
+        threading.Thread(target=fix_active_selection, daemon=True).start()
+
+    was_trusted = False
+    registered = False
+
+    while True:
+        trusted = is_accessibility_trusted()
+        if not registered or (trusted and not was_trusted):
+            if _hotkey_listener:
+                try:
+                    _hotkey_listener.stop()
+                except Exception:
+                    pass
+            try:
+                _hotkey_listener = keyboard.GlobalHotKeys({
+                    '<cmd>+<alt>+g': on_hotkey,
+                    '<cmd>+<shift>+g': on_hotkey,
+                })
+                _hotkey_listener.start()
+                registered = True
+                print("[OpenGrammarly] Global Hotkeys (⌘⌥G / ⌘⇧G) successfully initialized!")
+            except Exception as e:
+                print("[OpenGrammarly] Hotkey supervisor init error:", e)
+
+        was_trusted = trusted
+        time.sleep(2.0)
+
+
+def start_global_hotkey_daemon():
+    """Starts global hotkey supervisor daemon."""
+    t = threading.Thread(target=_hotkey_supervisor, daemon=True)
+    t.start()
+
+
+LAUNCH_AGENT_PATH = os.path.expanduser("~/Library/LaunchAgents/org.opengrammarly.app.plist")
+
+def is_launch_at_login_enabled() -> bool:
+    return os.path.exists(LAUNCH_AGENT_PATH)
+
+def toggle_launch_at_login() -> bool:
+    if is_launch_at_login_enabled():
+        try:
+            os.remove(LAUNCH_AGENT_PATH)
+        except Exception:
+            pass
+        return False
+    else:
+        try:
+            os.makedirs(os.path.dirname(LAUNCH_AGENT_PATH), exist_ok=True)
+            plist_content = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.opengrammarly.app</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/open</string>
+        <string>/Applications/OpenGrammarly.app</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>"""
+            with open(LAUNCH_AGENT_PATH, "w") as f:
+                f.write(plist_content)
+            return True
+        except Exception:
+            return False
+
+
+if AppKit:
+    class MenuHandler(AppKit.NSObject):
+        def setWindow_(self, win):
+            self._window = win
+
+        def showWindow_(self, sender):
+            if self._window:
+                self._window.show()
+                self._window.restore()
+                AppKit.NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+
+        def fixSelection_(self, sender):
+            threading.Thread(target=fix_active_selection, daemon=True).start()
+
+        def openTranslator_(self, sender):
+            if self._window:
+                self._window.show()
+                self._window.restore()
+                AppKit.NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+                self._window.evaluate_js("if (typeof switchTab === 'function') switchTab('translate');")
+
+        def openExtension_(self, sender):
+            subprocess.run(["open", EXTENSION_DIR], check=False)
+
+        def toggleLaunchAtLogin_(self, sender):
+            new_state = toggle_launch_at_login()
+            sender.setState_(AppKit.NSControlStateValueOn if new_state else AppKit.NSControlStateValueOff)
+
+        def quitApp_(self, sender):
+            AppKit.NSApplication.sharedApplication().terminate_(self)
+
+_status_item = None
+_menu_handler = None
+
+def setup_menu_bar(window):
+    global _status_item, _menu_handler
+    if not AppKit:
+        return
+    try:
+        status_bar = AppKit.NSStatusBar.systemStatusBar()
+        _status_item = status_bar.statusItemWithLength_(AppKit.NSVariableStatusItemLength)
+        button = _status_item.button()
+        button.setTitle_("✍️")
+        button.setToolTip_("OpenGrammarly - Click for Fast Access")
+
+        _menu_handler = MenuHandler.alloc().init()
+        _menu_handler.setWindow_(window)
+
+        menu = AppKit.NSMenu.alloc().init()
+
+        # Open Window
+        item_open = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Open OpenGrammarly", "showWindow:", "o")
+        item_open.setTarget_(_menu_handler)
+        menu.addItem_(item_open)
+
+        # Fix Selection
+        item_fix = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Fix Selected Text (⌘⌥G)", "fixSelection:", "g")
+        item_fix.setKeyEquivalentModifierMask_(AppKit.NSEventModifierFlagCommand | AppKit.NSEventModifierFlagOption)
+        item_fix.setTarget_(_menu_handler)
+        menu.addItem_(item_fix)
+
+        # DeepL Translator Tab
+        item_trans = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("DeepL Translator Tab", "openTranslator:", "t")
+        item_trans.setTarget_(_menu_handler)
+        menu.addItem_(item_trans)
+
+        menu.addItem_(AppKit.NSMenuItem.separatorItem())
+
+        # Chrome Extension Folder
+        item_ext = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Chrome Extension Folder...", "openExtension:", "")
+        item_ext.setTarget_(_menu_handler)
+        menu.addItem_(item_ext)
+
+        # Launch at Login
+        item_login = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Launch on Mac Startup", "toggleLaunchAtLogin:", "")
+        item_login.setTarget_(_menu_handler)
+        item_login.setState_(AppKit.NSControlStateValueOn if is_launch_at_login_enabled() else AppKit.NSControlStateValueOff)
+        menu.addItem_(item_login)
+
+        menu.addItem_(AppKit.NSMenuItem.separatorItem())
+
+        # Quit
+        item_quit = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit OpenGrammarly", "quitApp:", "q")
+        item_quit.setTarget_(_menu_handler)
+        menu.addItem_(item_quit)
+
+        _status_item.setMenu_(menu)
+        print("[OpenGrammarly] Menu bar status item configured successfully!")
+    except Exception as e:
+        print("[OpenGrammarly] Menu bar setup error:", e)
+
+
 def start_floating_pill_daemon():
     """Start the floating selection pill watcher."""
     script = os.path.join(APP_DIR, "floating_widget.py")
@@ -389,13 +688,16 @@ def main():
     t_clip = threading.Thread(target=_clipboard_monitor, daemon=True)
     t_clip.start()
 
-    # 4. Start floating pill daemon
+    # 4. Start global hotkey daemon (Cmd+Alt+G / Cmd+Shift+G)
+    start_global_hotkey_daemon()
+
+    # 5. Start floating pill daemon
     start_floating_pill_daemon()
 
     # Wait for server ready
     time.sleep(0.3)
 
-    # 5. Open native macOS WebKit window
+    # 6. Open native macOS WebKit window
     window = webview.create_window(
         title="OpenGrammarly",
         url=f"http://127.0.0.1:{PORT}",
@@ -404,6 +706,18 @@ def main():
         min_size=(880, 580),
         text_select=True,
     )
+
+    # 7. Setup macOS Menu Bar fast-access icon
+    setup_menu_bar(window)
+
+    # 8. Keep app running in Menu Bar when window is closed (red X button)
+    def on_closing():
+        window.hide()
+        return False
+
+    window.events.closing += on_closing
+
+    # Start PyWebView Cocoa event loop
     webview.start()
 
 

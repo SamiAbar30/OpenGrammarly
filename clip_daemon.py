@@ -17,7 +17,7 @@ import urllib.request
 SERVER_URL = "http://localhost:8081/v2/check"
 
 
-def notify(message: str, title: str = "GrammarlyLocal"):
+def notify(message: str, title: str = "OpenGrammarly"):
     script = f'display notification "{message}" with title "{title}"'
     subprocess.run(["osascript", "-e", script], check=False)
 
@@ -74,7 +74,7 @@ def main():
     args = parser.parse_args()
 
     print("==================================================")
-    print(" GrammarlyLocal Clipboard Monitor Running")
+    print(" OpenGrammarly Clipboard Monitor Running")
     print(f" Language: {args.language}")
     print(f" Auto-paste: {'Enabled' if args.auto_paste else 'Disabled (Updates clipboard only)'}")
     print(" Press Ctrl+C to stop")
@@ -99,7 +99,7 @@ def main():
                     print(f"[{time.strftime('%H:%M:%S')}] Fixed {count} issue(s):")
                     print(f"  Before: {current.strip()[:60]}...")
                     print(f"  After : {fixed.strip()[:60]}...\n")
-                    notify(f"✨ Auto-fixed {count} error(s)!", "GrammarlyLocal")
+                    notify(f"✨ Auto-fixed {count} error(s)!", "OpenGrammarly")
                     if args.auto_paste:
                         time.sleep(0.1)
                         paste_into_active_app()

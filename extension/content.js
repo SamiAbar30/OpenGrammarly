@@ -1,4 +1,4 @@
-// GrammarlyLocal Browser Extension Content Script
+// OpenGrammarly Browser Extension Content Script
 (() => {
   // Clean up any stale UI elements from previous extension loads/reloads
   document.querySelectorAll(".gl-badge, .gl-popover").forEach((node) => node.remove());
@@ -138,13 +138,13 @@
     try {
       document.execCommand("insertText", false, cleanText);
     } catch (e) {
-      console.warn("[GrammarlyLocal] insertText error:", e);
+      console.warn("[OpenGrammarly] insertText error:", e);
     }
 
     // 5. Verification: Did Lexical retain the old text and append?
     const currentVal = getElementText(el);
     if (currentVal !== cleanText && currentVal.length > cleanText.length) {
-      console.warn("[GrammarlyLocal] Duplication detected, performing second clean pass...");
+      console.warn("[OpenGrammarly] Duplication detected, performing second clean pass...");
       try {
         document.execCommand("selectAll", false, null);
         document.execCommand("delete", false, null);
@@ -330,7 +330,7 @@
     }
 
     const newFullText = chars.join("");
-    console.log("[GrammarlyLocal] autoFixAll replacing entire text with:", newFullText);
+    console.log("[OpenGrammarly] autoFixAll replacing entire text with:", newFullText);
 
     replaceTextInElement(el, newFullText, () => {
       checkActiveText();
@@ -351,7 +351,7 @@
     const currentText = getElementText(el);
     const targetText = computeSingleFixText(currentText, m, rep);
 
-    console.log(`[GrammarlyLocal] Single fix #${idx}: replacing with: "${targetText}"`);
+    console.log(`[OpenGrammarly] Single fix #${idx}: replacing with: "${targetText}"`);
 
     replaceTextInElement(el, targetText, () => {
       checkActiveText();
@@ -444,7 +444,7 @@
       { action: "translate", text: currentText, from: "auto", to: targetLang },
       (response) => {
         if (response && response.translated) {
-          console.log(`[GrammarlyLocal] Translated to ${targetLang}:`, response.translated);
+          console.log(`[OpenGrammarly] Translated to ${targetLang}:`, response.translated);
           popover.style.display = "none";
           replaceTextInElement(el, response.translated, () => {
             checkActiveText();

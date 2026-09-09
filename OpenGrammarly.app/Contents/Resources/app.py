@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GrammarlyLocal - All-in-One Automated macOS Application.
+OpenGrammarly - All-in-One Automated macOS Application.
 Features:
 - Self-starting LanguageTool engine on localhost:8081
 - Local UI & API server on localhost:8082
@@ -293,7 +293,7 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
                 proc.communicate(text)
                 script = """
                 tell application "System Events"
-                    set frontmost of process "GrammarlyLocal" to false
+                    set frontmost of process "OpenGrammarly" to false
                 end tell
                 delay 0.15
                 tell application "System Events"
@@ -359,7 +359,7 @@ def _clipboard_monitor():
                         [
                             "osascript",
                             "-e",
-                            f'display notification "✨ Auto-fixed {count} error(s) in clipboard!" with title "GrammarlyLocal"',
+                            f'display notification "✨ Auto-fixed {count} error(s) in clipboard!" with title "OpenGrammarly"',
                         ],
                         check=False,
                     )
@@ -397,7 +397,7 @@ def main():
 
     # 5. Open native macOS WebKit window
     window = webview.create_window(
-        title="GrammarlyLocal",
+        title="OpenGrammarly",
         url=f"http://127.0.0.1:{PORT}",
         width=1040,
         height=720,

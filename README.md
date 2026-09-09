@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨ GrammarlyLocal
+# ✨ OpenGrammarly
 
 ### 100% Private, Offline Grammar Checker & DeepL-Style Neural Translator for macOS
 
@@ -9,7 +9,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/telemetry-Zero%20Data%20Collected-blue.svg?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg?style=flat-square)](LICENSE)
 
-**GrammarlyLocal** is an all-in-one, zero-config desktop application and browser extension that gives you the best of **Grammarly + DeepL** running completely locally on your Mac. No accounts, no cloud API keys, no subscriptions, and zero telemetry.
+**OpenGrammarly** is an all-in-one, zero-config desktop application and browser extension that gives you the best of **Grammarly + DeepL** running completely locally on your Mac. No accounts, no cloud API keys, no subscriptions, and zero telemetry.
 
 </div>
 
@@ -20,14 +20,14 @@
 Open your macOS Terminal and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SamiAbar30/GrammarlyLocal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SamiAbar30/OpenGrammarly/main/install.sh | bash
 ```
 
 Or clone the repo and run:
 
 ```bash
-git clone https://github.com/SamiAbar30/GrammarlyLocal.git
-cd GrammarlyLocal
+git clone https://github.com/SamiAbar30/OpenGrammarly.git
+cd OpenGrammarly
 ./install.sh
 ```
 
@@ -35,7 +35,7 @@ cd GrammarlyLocal
 - Installs and starts the local **LanguageTool** grammar engine on `localhost:8081`.
 - Sets up Python dependencies (`pywebview`, `argostranslate`, `ctranslate2`, `torch`).
 - Downloads offline neural translation models for **English, Spanish, French, German, Italian, Portuguese, Arabic**.
-- Installs `GrammarlyLocal.app` into `/Applications` and launches it.
+- Installs `OpenGrammarly.app` into `/Applications` and launches it.
 - **Zero manual configuration required!**
 
 ---
@@ -71,7 +71,7 @@ cd GrammarlyLocal
 3. Click **"Load unpacked"**.
 4. Select the extension directory:
    ```text
-   /Applications/GrammarlyLocal.app/Contents/Resources/extension
+   /Applications/OpenGrammarly.app/Contents/Resources/extension
    ```
    *(Or the `extension` folder inside this repository).*
 5. You're done! A floating indicator will now appear whenever you type in WhatsApp Web, Slack, Gmail, or any text field.
@@ -82,7 +82,7 @@ cd GrammarlyLocal
 
 - **Zero Cloud APIs**: All grammar checking runs against your local LanguageTool server on `localhost:8081`.
 - **Zero External Translation Calls**: Translation weights run directly on your Mac's Apple Silicon / Intel CPU via CTranslate2.
-- **Works Without Internet**: Once installed, you can turn off Wi-Fi completely and GrammarlyLocal will continue checking grammar and translating seamlessly.
+- **Works Without Internet**: Once installed, you can turn off Wi-Fi completely and OpenGrammarly will continue checking grammar and translating seamlessly.
 
 ---
 
@@ -90,7 +90,7 @@ cd GrammarlyLocal
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   GrammarlyLocal                       │
+│                   OpenGrammarly                       │
 ├──────────────────────────┬─────────────────────────────┤
 │   Desktop PyWebView App  │   Chromium Extension        │
 │   (HTML5 / Modern Dark)  │   (Content Script + Worker) │

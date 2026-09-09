@@ -13,10 +13,8 @@ int main(int argc, char *argv[]) {
     }
     char *dir = dirname(path);
     char script_path[2048];
-    // Inside Contents/MacOS, so Resources is at ../Resources/app.py
     snprintf(script_path, sizeof(script_path), "%s/../Resources/app.py", dir);
 
-    // If not in Resources, check parent directory of the app
     if (access(script_path, F_OK) != 0) {
         snprintf(script_path, sizeof(script_path), "%s/../../../app.py", dir);
     }
@@ -27,13 +25,26 @@ int main(int argc, char *argv[]) {
     setenv("LC_ALL", "en_US.UTF-8", 1);
     setenv("LANG", "en_US.UTF-8", 1);
 
-    char *python_path = "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3";
-    char *args[] = {
-        python_path,
-        script_path,
+    char *python_candidates[] = {
+        "/opt/homebrew/bin/python3",
+        "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3",
+        "/Library/Frameworks/Python.framework/Versions/Current/bin/python3",
+        "/usr/local/bin/python3",
+        "/usr/bin/python3",
         NULL
     };
-    execv(python_path, args);
-    perror("execv failed");
+
+    char *args[] = { "python3", script_path, NULL };
+
+    for (int i = 0; python_candidates[i] != NULL; i++) {
+        if (access(python_candidates[i], X_OK) == 0) {
+            args[0] = python_candidates[i];
+            execv(python_candidates[i], args);
+        }
+    }
+
+    // Fallback to system PATH python3
+    execvp("python3", args);
+    perror("execvp failed");
     return 1;
 }

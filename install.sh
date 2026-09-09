@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🚀 GrammarlyLocal - 100% Automated Zero-Config Installer for macOS
+# 🚀 OpenGrammarly - 100% Automated Zero-Config Installer for macOS
 # 100% Local, Private, Offline Grammar Checker & DeepL-Style Translator
 # ==============================================================================
 
@@ -15,14 +15,14 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}${BOLD}"
 echo "================================================================="
-echo "   ✨ GrammarlyLocal - Automated Zero-Config macOS Setup ✨      "
+echo "   ✨ OpenGrammarly - Automated Zero-Config macOS Setup ✨      "
 echo "   100% Local • Zero Telemetry • Offline Grammar & Translator    "
 echo "================================================================="
 echo -e "${NC}"
 
 # Check OS
 if [[ "$(uname)" != "Darwin" ]]; then
-    echo -e "${RED}❌ Error: GrammarlyLocal is designed for macOS.${NC}"
+    echo -e "${RED}❌ Error: OpenGrammarly is designed for macOS.${NC}"
     exit 1
 fi
 
@@ -102,27 +102,27 @@ except Exception as e:
 " || true
 
 # Step 5: Install Desktop App to /Applications
-echo -e "${BLUE}[5/6] Installing GrammarlyLocal.app to /Applications...${NC}"
-if [[ -d "$DIR/GrammarlyLocal.app" ]]; then
-    rm -rf /Applications/GrammarlyLocal.app
-    cp -R "$DIR/GrammarlyLocal.app" /Applications/
-    xattr -cr /Applications/GrammarlyLocal.app 2>/dev/null || true
-    echo -e "${GREEN}✓ GrammarlyLocal.app installed to /Applications.${NC}"
+echo -e "${BLUE}[5/6] Installing OpenGrammarly.app to /Applications...${NC}"
+if [[ -d "$DIR/OpenGrammarly.app" ]]; then
+    rm -rf /Applications/OpenGrammarly.app
+    cp -R "$DIR/OpenGrammarly.app" /Applications/
+    xattr -cr /Applications/OpenGrammarly.app 2>/dev/null || true
+    echo -e "${GREEN}✓ OpenGrammarly.app installed to /Applications.${NC}"
 fi
 
 # Step 6: Launch and Finish
-echo -e "${BLUE}[6/6] Launching GrammarlyLocal...${NC}"
-open /Applications/GrammarlyLocal.app
+echo -e "${BLUE}[6/6] Launching OpenGrammarly...${NC}"
+open /Applications/OpenGrammarly.app
 
 echo ""
 echo -e "${GREEN}${BOLD}🎉 Installation Complete! All systems are online.${NC}"
 echo "-----------------------------------------------------------------"
-echo -e "🖥️  ${BOLD}Desktop App:${NC} /Applications/GrammarlyLocal.app (now running!)"
+echo -e "🖥️  ${BOLD}Desktop App:${NC} /Applications/OpenGrammarly.app (now running!)"
 echo -e "🌐  ${BOLD}Translation:${NC} 100% Offline (DeepL-Style) ready in app"
 echo -e "🧩  ${BOLD}Chrome / WhatsApp Extension:${NC}"
 echo "    1. Open chrome://extensions in your browser"
 echo "    2. Turn ON 'Developer mode' (top right corner)"
 echo "    3. Click 'Load unpacked' and choose:"
-echo -e "       ${BOLD}/Applications/GrammarlyLocal.app/Contents/Resources/extension${NC}"
+echo -e "       ${BOLD}/Applications/OpenGrammarly.app/Contents/Resources/extension${NC}"
 echo "-----------------------------------------------------------------"
 echo -e "${GREEN}Enjoy private, offline grammar checking and translation! 🚀${NC}"

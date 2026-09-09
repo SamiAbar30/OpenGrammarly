@@ -1,4 +1,4 @@
-// GrammarlyLocal Background Service Worker (Manifest V3)
+// OpenGrammarly Background Service Worker (Manifest V3)
 // Bypasses page CSP and Mixed Content security restrictions on HTTPS pages (like WhatsApp Web).
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

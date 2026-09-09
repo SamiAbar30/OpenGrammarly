@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GrammarlyLocal - Floating Selection Action Pill.
+OpenGrammarly - Floating Selection Action Pill.
 Monitors selected text across macOS applications.
 When text with errors is highlighted, displays a floating pill near the cursor with 1-click auto-fix.
 """
@@ -189,7 +189,7 @@ class FloatingPill:
             p.communicate(fixed)
             subprocess.run(["osascript", "-e", 'tell application "System Events" to keystroke "v" using {command down}'], check=False)
 
-        subprocess.run(["osascript", "-e", f'display notification "✨ Fixed {len(self.current_matches)} error(s)!" with title "GrammarlyLocal"'], check=False)
+        subprocess.run(["osascript", "-e", f'display notification "✨ Fixed {len(self.current_matches)} error(s)!" with title "OpenGrammarly"'], check=False)
         self.hide()
         self.last_checked_text = fixed
 

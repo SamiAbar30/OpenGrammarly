@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GrammarlyLocal - Local DeepL-like Offline Neural Translation Engine.
+OpenGrammarly - Local DeepL-like Offline Neural Translation Engine.
 Powered by Argos Translate & OpenNMT / CTranslate2.
 Runs 100% offline on Apple Silicon with zero external API calls.
 """

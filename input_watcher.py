@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GrammarlyLocal - System-wide Any-Input Detector for macOS.
+OpenGrammarly - System-wide Any-Input Detector for macOS.
 Inspects the currently focused text field in ANY application (Safari, Chrome, Notes, Slack, etc.)
 using the macOS Accessibility API (AXUIElement).
 """
@@ -78,7 +78,7 @@ kAXRole = to_cfstring("AXRole")
 SERVER_URL = "http://localhost:8081/v2/check"
 
 
-def notify(message: str, title: str = "GrammarlyLocal"):
+def notify(message: str, title: str = "OpenGrammarly"):
     script = f'display notification "{message}" with title "{title}"'
     subprocess.run(["osascript", "-e", script], check=False)
 
@@ -141,7 +141,7 @@ def get_focused_input_text(system_wide: AXUIElementRef) -> tuple[AXUIElementRef,
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GrammarlyLocal - Any Input Detector")
+    parser = argparse.ArgumentParser(description="OpenGrammarly - Any Input Detector")
     parser.add_argument("--auto-replace", action="store_true", help="Automatically replace errors directly in the input")
     parser.add_argument("-l", "--language", default="en-US", help="Language (default: en-US)")
     args = parser.parse_args()
@@ -154,7 +154,7 @@ def main():
         print("=======================================================")
         print("To detect text in any input (Chrome, Safari, Slack, Notes):")
         print("1. Open System Settings -> Privacy & Security -> Accessibility")
-        print("2. Enable permission for Terminal (or Python / GrammarlyLocal)")
+        print("2. Enable permission for Terminal (or Python / OpenGrammarly)")
         print("=======================================================\n")
         # Trigger macOS permission prompt
         subprocess.run(
@@ -166,7 +166,7 @@ def main():
             check=False,
         )
 
-    print(f"GrammarlyLocal Input Watcher started (Language: {args.language})...")
+    print(f"OpenGrammarly Input Watcher started (Language: {args.language})...")
     print("Monitoring focused input fields across all macOS apps...\n")
 
     system_wide = app_services.AXUIElementCreateSystemWide()
@@ -202,9 +202,9 @@ def main():
                             cf_fixed = to_cfstring(fixed_text)
                             app_services.AXUIElementSetAttributeValue(elem, kAXValue, cf_fixed)
                             core_foundation.CFRelease(cf_fixed)
-                            notify(f"✨ Auto-fixed {count} error(s) in input!", "GrammarlyLocal")
+                            notify(f"✨ Auto-fixed {count} error(s) in input!", "OpenGrammarly")
                         else:
-                            notify(f"⚠️ {count} error(s) found! (e.g. \"{err_word}\" → \"{best_rep}\")", "GrammarlyLocal")
+                            notify(f"⚠️ {count} error(s) found! (e.g. \"{err_word}\" → \"{best_rep}\")", "OpenGrammarly")
 
             if elem:
                 core_foundation.CFRelease(elem)

@@ -125,27 +125,32 @@
     // Case 2: ContentEditable (WhatsApp Web Lexical, Slack, Notion, Gmail, etc.)
     el.focus();
 
-    // 1. First, select all contents natively and via DOM Range
-    try {
-      document.execCommand("selectAll", false, null);
-    } catch (e) {}
-
-    const sel = window.getSelection();
-    if (sel) {
-      try {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        sel.removeAllRanges();
-        sel.addRange(range);
-      } catch (e) {}
+    // 1. Collect innermost text nodes within the editable element
+    const textNodes = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue !== null) {
+        textNodes.push(node);
+      }
     }
 
-    // 2. Clear selected content completely (crucial: avoids appending text in Lexical/WhatsApp)
-    try {
-      document.execCommand("delete", false, null);
-    } catch (e) {}
+    // 2. Target the exact text span selection range from start to end of text nodes
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      const range = document.createRange();
+      if (textNodes.length > 0) {
+        range.setStart(textNodes[0], 0);
+        const lastNode = textNodes[textNodes.length - 1];
+        range.setEnd(lastNode, lastNode.nodeValue ? lastNode.nodeValue.length : 0);
+      } else {
+        range.selectNodeContents(el);
+      }
+      sel.addRange(range);
+    }
 
-    // 3. Insert the clean replacement text into the cleared editor
+    // 3. Atomically replace the text selection in one operation (avoids Lexical container deletion rejection)
     let inserted = false;
     try {
       inserted = document.execCommand("insertText", false, cleanText);
@@ -153,30 +158,21 @@
       inserted = false;
     }
 
-    // 4. If execCommand insertText did not populate text, try simulated paste (Lexical clipboard fallback)
+    // 4. Post-replacement verification: if editor did not sync or duplicated, directly reconcile text node
     let currentVal = getElementText(el);
-    if (!inserted || currentVal.trim() !== cleanText.trim()) {
-      try {
-        const dt = new DataTransfer();
-        dt.setData("text/plain", cleanText);
-        el.dispatchEvent(
-          new ClipboardEvent("paste", {
-            clipboardData: dt,
-            bubbles: true,
-            cancelable: true,
-          })
-        );
-      } catch (e) {}
-    }
-
-    // 5. Final fallback: direct DOM node update if editor is still not synced
-    currentVal = getElementText(el);
     if (currentVal.trim() !== cleanText.trim()) {
-      const lexicalSpan = el.querySelector('[data-lexical-text="true"]');
-      if (lexicalSpan) {
-        lexicalSpan.textContent = cleanText;
+      if (textNodes.length > 0) {
+        textNodes[0].nodeValue = cleanText;
+        for (let i = 1; i < textNodes.length; i++) {
+          textNodes[i].nodeValue = "";
+        }
       } else {
-        el.innerText = cleanText;
+        const lexicalSpan = el.querySelector('[data-lexical-text="true"]');
+        if (lexicalSpan) {
+          lexicalSpan.textContent = cleanText;
+        } else {
+          el.innerText = cleanText;
+        }
       }
     }
 

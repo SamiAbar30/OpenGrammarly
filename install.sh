@@ -143,11 +143,16 @@ echo ""
 echo -e "${GREEN}${BOLD}🎉 Installation Complete! All systems are online.${NC}"
 echo "-----------------------------------------------------------------"
 echo -e "🖥️  ${BOLD}Desktop App:${NC} /Applications/OpenGrammarly.app (now running!)"
-echo -e "🌐  ${BOLD}Translation:${NC} 100% Offline (DeepL-Style) ready in app"
+# Export extension to Downloads for effortless 1-click loading in Chrome
+mkdir -p "$HOME/Downloads/OpenGrammarly-Extension"
+if [[ -d "$DIR/OpenGrammarly.app/Contents/Resources/extension" ]]; then
+    cp -R "$DIR/OpenGrammarly.app/Contents/Resources/extension/"* "$HOME/Downloads/OpenGrammarly-Extension/"
+fi
+
 echo -e "🧩  ${BOLD}Chrome / WhatsApp Extension:${NC}"
 echo "    1. Open chrome://extensions in your browser"
 echo "    2. Turn ON 'Developer mode' (top right corner)"
-echo "    3. Click 'Load unpacked' and choose:"
-echo -e "       ${BOLD}/Applications/OpenGrammarly.app/Contents/Resources/extension${NC}"
+echo "    3. Click 'Load unpacked' and select:"
+echo -e "       ${BOLD}Downloads -> OpenGrammarly-Extension${NC}"
 echo "-----------------------------------------------------------------"
 echo -e "${GREEN}Enjoy private, offline grammar checking and translation! 🚀${NC}"

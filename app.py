@@ -49,6 +49,25 @@ EXTENSION_DIR = os.path.join(APP_DIR, "extension")
 if not os.path.exists(EXTENSION_DIR):
     EXTENSION_DIR = os.path.join(APP_DIR, "Resources", "extension")
 
+USER_EXTENSION_DIR = os.path.expanduser("~/Downloads/OpenGrammarly-Extension")
+
+def ensure_extension_exported():
+    """Exports Chrome extension to ~/Downloads/OpenGrammarly-Extension for easy 1-click loading."""
+    try:
+        if not os.path.exists(EXTENSION_DIR):
+            return
+        os.makedirs(USER_EXTENSION_DIR, exist_ok=True)
+        import shutil
+        for item in os.listdir(EXTENSION_DIR):
+            s = os.path.join(EXTENSION_DIR, item)
+            d = os.path.join(USER_EXTENSION_DIR, item)
+            if os.path.isdir(s):
+                shutil.copytree(s, d, dirs_exist_ok=True)
+            else:
+                shutil.copy2(s, d)
+    except Exception as e:
+        print("[OpenGrammarly] Export extension error:", e)
+
 LT_SERVER_URL = "http://localhost:8081/v2/check"
 PORT = 8082
 
@@ -367,12 +386,15 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "requested"}).encode("utf-8"))
 
         elif self.path == "/api/open_extension_folder":
-            # Reveal the bundled extension folder in Finder
-            subprocess.run(["open", EXTENSION_DIR], check=False)
+            ensure_extension_exported()
+            subprocess.run(["open", USER_EXTENSION_DIR], check=False)
+            # Copy path to clipboard for instant pasting if needed
+            p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
+            p.communicate(USER_EXTENSION_DIR)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "opened"}).encode("utf-8"))
+            self.wfile.write(json.dumps({"status": "opened", "path": USER_EXTENSION_DIR}).encode("utf-8"))
 
         else:
             self.send_response(404)
@@ -597,7 +619,8 @@ if AppKit:
                 self._window.evaluate_js("if (typeof switchTab === 'function') switchTab('translate');")
 
         def openExtension_(self, sender):
-            subprocess.run(["open", EXTENSION_DIR], check=False)
+            ensure_extension_exported()
+            subprocess.run(["open", USER_EXTENSION_DIR], check=False)
 
         def toggleLaunchAtLogin_(self, sender):
             new_state = toggle_launch_at_login()
@@ -693,6 +716,9 @@ def main():
 
     # 5. Start floating pill daemon
     start_floating_pill_daemon()
+
+    # 6. Ensure Chrome extension is exported to ~/Downloads/OpenGrammarly-Extension
+    ensure_extension_exported()
 
     # Wait for server ready
     time.sleep(0.3)

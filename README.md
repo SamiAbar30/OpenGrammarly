@@ -81,11 +81,11 @@ cd OpenGrammarly
    ```
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **"Load unpacked"**.
-4. Select the extension directory:
+4. Click **Downloads** on the left and select:
    ```text
-   /Applications/OpenGrammarly.app/Contents/Resources/extension
+   OpenGrammarly-Extension
    ```
-   *(Or the `extension` folder inside this repository).*
+   *(Or click **"🧩 Chrome Extension"** inside OpenGrammarly to open it directly).*
 5. You're done! A floating indicator will now appear whenever you type in WhatsApp Web, Slack, Gmail, or any text field.
 
 ---

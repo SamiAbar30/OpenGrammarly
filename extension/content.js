@@ -100,57 +100,87 @@
     const cleanText = newText.replace(/\r\n/g, "\n");
     isFixing = true;
 
-    // Case 1: Standard input / textarea
+    // Case 1: Standard input / textarea (React/Vue prototype setter)
     if (!el.isContentEditable) {
-      el.value = cleanText;
+      const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+      if (setter) {
+        setter.call(el, cleanText);
+      } else {
+        el.value = cleanText;
+      }
+      try {
+        el.setSelectionRange(cleanText.length, cleanText.length);
+      } catch (e) {}
+
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
       setTimeout(() => {
         isFixing = false;
         if (callback) callback();
-      }, 100);
+      }, 80);
       return;
     }
 
-    // Case 2: ContentEditable (WhatsApp Web Lexical, Slack, Notion, etc.)
+    // Case 2: ContentEditable (WhatsApp Web Lexical, Slack, Notion, Gmail, etc.)
     el.focus();
 
-    // 1. Native SelectAll command (triggers Lexical's internal select all)
-    try {
-      document.execCommand("selectAll", false, null);
-    } catch (e) {}
+    // 1. Collect all non-empty text nodes inside the editable element
+    const textNodes = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue !== null) {
+        textNodes.push(node);
+      }
+    }
 
-    // 2. SelectNodeContents on el to ensure DOM Range is spanning all children
-    try {
-      const sel = window.getSelection();
-      const range = document.createRange();
+    // 2. Select from start of first text node to end of last text node
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const range = document.createRange();
+
+    if (textNodes.length > 0) {
+      const first = textNodes[0];
+      const last = textNodes[textNodes.length - 1];
+      range.setStart(first, 0);
+      range.setEnd(last, last.nodeValue ? last.nodeValue.length : 0);
+    } else {
       range.selectNodeContents(el);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    } catch (e) {}
+    }
+    sel.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
 
-    // 3. Delete existing selection so it NEVER appends
+    // 3. Atomically replace selection using execCommand("insertText") - NEVER call delete first!
+    let replaced = false;
     try {
-      document.execCommand("delete", false, null);
-    } catch (e) {}
-
-    // 4. Insert the new replacement text
-    try {
-      document.execCommand("insertText", false, cleanText);
+      replaced = document.execCommand("insertText", false, cleanText);
     } catch (e) {
-      console.warn("[OpenGrammarly] insertText error:", e);
+      replaced = false;
     }
 
-    // 5. Verification: Did Lexical retain the old text and append?
+    // 4. Verification: Check if editor content was properly replaced or if Lexical/editor needs direct node sync
     const currentVal = getElementText(el);
-    if (currentVal !== cleanText && currentVal.length > cleanText.length) {
-      console.warn("[OpenGrammarly] Duplication detected, performing second clean pass...");
-      try {
-        document.execCommand("selectAll", false, null);
-        document.execCommand("delete", false, null);
-        document.execCommand("insertText", false, cleanText);
-      } catch (e) {}
+    if (currentVal !== cleanText) {
+      console.warn("[OpenGrammarly] Syncing contenteditable text directly:", cleanText);
+      if (textNodes.length > 0) {
+        textNodes[0].nodeValue = cleanText;
+        for (let i = 1; i < textNodes.length; i++) {
+          textNodes[i].nodeValue = "";
+        }
+      } else {
+        el.innerText = cleanText;
+      }
     }
+
+    // 5. Position cursor cleanly at the end of the new text
+    try {
+      const finalRange = document.createRange();
+      finalRange.selectNodeContents(el);
+      finalRange.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(finalRange);
+    } catch (e) {}
 
     // 6. Notify framework of input change
     try {
@@ -169,7 +199,7 @@
     setTimeout(() => {
       isFixing = false;
       if (callback) callback();
-    }, 150);
+    }, 120);
   }
 
   function updateBadgePosition() {
@@ -226,48 +256,79 @@
   // Client-side fallback smart rule enhancer
   function applySmartEnhancements(text, matches) {
     const enhanced = [...matches];
+    const existingIds = new Set(matches.map((m) => (m.rule ? m.rule.id : m.id)));
 
-    // 1. Missing comma after greeting: "Hello I'm", "Hi Sami"
-    const mGreeting = text.match(/\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)/i);
-    if (mGreeting && !text.substring(mGreeting.index).startsWith(mGreeting[1] + ",")) {
-      enhanced.push({
-        message: `Add a comma after the greeting "${mGreeting[1]}".`,
-        shortMessage: "Missing comma",
-        replacements: [{ value: `${mGreeting[1]}, ${mGreeting[2]}` }],
-        offset: mGreeting.index,
-        length: mGreeting[0].length,
-        rule: { id: "GREETING_COMMA", issueType: "grammar" },
-      });
+    // 1. Missing comma after greeting or missing subject: "Hi am Sami" -> "Hi, I'm Sami"
+    if (!existingIds.has("GREETING_IM_NAME") && !existingIds.has("GREETING_COMMA")) {
+      const mHiAm = text.match(/\b(Hi|Hello|Hey)\s+am\s+([A-Za-z\']+)/i);
+      if (mHiAm) {
+        const g = mHiAm[1].charAt(0).toUpperCase() + mHiAm[1].slice(1).toLowerCase();
+        enhanced.push({
+          message: `Did you mean "${g}, I'm ${mHiAm[2]}"?`,
+          shortMessage: "Missing subject",
+          replacements: [{ value: `${g}, I'm ${mHiAm[2]}` }, { value: `${g}, I am ${mHiAm[2]}` }],
+          offset: mHiAm.index,
+          length: mHiAm[0].length,
+          rule: { id: "GREETING_IM_NAME", issueType: "grammar" },
+        });
+      } else {
+        const mGreeting = text.match(/\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)/i);
+        if (mGreeting && !text.substring(mGreeting.index).startsWith(mGreeting[1] + ",")) {
+          enhanced.push({
+            message: `Add a comma after the greeting "${mGreeting[1]}".`,
+            shortMessage: "Missing comma",
+            replacements: [{ value: `${mGreeting[1]}, ${mGreeting[2]}` }],
+            offset: mGreeting.index,
+            length: mGreeting[0].length,
+            rule: { id: "GREETING_COMMA", issueType: "grammar" },
+          });
+        }
+      }
     }
 
     // 2. Question phrasing: "what to do" / "so what to do"
-    const mQ = text.match(/\b(so\s+)?(what to do)\b/i);
-    if (mQ) {
-      enhanced.push({
-        message: "Consider phrasing this as a question for clarity.",
-        shortMessage: "Question phrasing",
-        replacements: [{ value: "what should I do?" }, { value: "what to do?" }],
-        offset: mQ.index,
-        length: mQ[0].length,
-        rule: { id: "QUESTION_PHRASING", issueType: "style" },
-      });
+    if (!existingIds.has("QUESTION_PHRASING")) {
+      const mQ = text.match(/\b(so\s+)?(what to do)\b/i);
+      if (mQ) {
+        enhanced.push({
+          message: "Consider phrasing this as a question for clarity.",
+          shortMessage: "Question phrasing",
+          replacements: [{ value: "what should I do?" }, { value: "what to do?" }],
+          offset: mQ.index,
+          length: mQ[0].length,
+          rule: { id: "QUESTION_PHRASING", issueType: "style" },
+        });
+      }
     }
 
     // 3. Informal/Slang typo: "homo" -> "homie" / "bro" / "man"
-    const mSlang = text.match(/\bhomo\b/i);
-    if (mSlang) {
-      enhanced.push({
-        message: 'Informal word choice or typo. Did you mean "homie" or "bro"?',
-        shortMessage: "Word choice",
-        replacements: [{ value: "homie" }, { value: "bro" }, { value: "man" }],
-        offset: mSlang.index,
-        length: 4,
-        rule: { id: "WORD_CHOICE", issueType: "style" },
-      });
+    if (!existingIds.has("WORD_CHOICE")) {
+      const mSlang = text.match(/\bhomo\b/i);
+      if (mSlang) {
+        enhanced.push({
+          message: 'Informal word choice or typo. Did you mean "homie" or "bro"?',
+          shortMessage: "Word choice",
+          replacements: [{ value: "homie" }, { value: "bro" }, { value: "man" }],
+          offset: mSlang.index,
+          length: 4,
+          rule: { id: "WORD_CHOICE", issueType: "style" },
+        });
+      }
     }
 
-    enhanced.sort((a, b) => b.offset - a.offset);
-    return enhanced;
+    // De-duplicate matches by offset & length
+    const seen = new Set();
+    const deduped = [];
+    for (const m of enhanced) {
+      const key = `${m.offset}-${m.length}-${m.rule ? m.rule.id : ""}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(m);
+      }
+    }
+
+    deduped.sort((a, b) => b.offset - a.offset);
+    return deduped;
   }
 
   function checkActiveText() {
@@ -316,25 +377,36 @@
     popover.style.display = "none";
 
     const originalText = getElementText(el);
-    const sorted = [...currentMatches].sort((a, b) => b.offset - a.offset);
-    let chars = originalText.split("");
-    let lastEnd = originalText.length + 1;
 
-    for (const m of sorted) {
-      const start = m.offset;
-      const end = start + m.length;
-      if (end <= lastEnd && m.replacements && m.replacements[0]) {
-        chars.splice(start, m.length, ...m.replacements[0].value.split(""));
-        lastEnd = start;
+    // Call background service worker for server-side smart autofix
+    chrome.runtime.sendMessage(
+      { action: "autofix", text: originalText, language: "auto" },
+      (response) => {
+        let fixedText = "";
+        if (response && response.success && response.fixed) {
+          fixedText = response.fixed;
+        } else {
+          // Client-side fallback computation
+          const sorted = [...currentMatches].sort((a, b) => b.offset - a.offset);
+          let chars = originalText.split("");
+          let lastEnd = originalText.length + 1;
+          for (const m of sorted) {
+            const start = m.offset;
+            const end = start + m.length;
+            if (end <= lastEnd && m.replacements && m.replacements[0]) {
+              chars.splice(start, m.length, ...m.replacements[0].value.split(""));
+              lastEnd = start;
+            }
+          }
+          fixedText = chars.join("");
+        }
+
+        console.log("[OpenGrammarly] autoFixAll replacing with:", fixedText);
+        replaceTextInElement(el, fixedText, () => {
+          checkActiveText();
+        });
       }
-    }
-
-    const newFullText = chars.join("");
-    console.log("[OpenGrammarly] autoFixAll replacing entire text with:", newFullText);
-
-    replaceTextInElement(el, newFullText, () => {
-      checkActiveText();
-    });
+    );
   }
 
   function fixSingleMatch(idx) {

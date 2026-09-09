@@ -162,19 +162,32 @@ def detect_language(text: str) -> str:
 def enhance_text_rules(text: str, matches: list) -> list:
     enhanced = list(matches)
 
-    # 1. Missing comma after greeting: "Hello I'm", "Hi Sami", "Hey there"
-    m_greeting = re.search(r'\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)', text, re.IGNORECASE)
-    if m_greeting and not text[m_greeting.start():].startswith(m_greeting.group(1) + ","):
-        g = m_greeting.group(1)
-        w = m_greeting.group(2)
+    # 1. Missing comma after greeting or missing subject: "Hi am Sami" -> "Hi, I'm Sami"
+    m_hi_am = re.search(r'\b(Hi|Hello|Hey)\s+am\s+([A-Za-z\']+)', text, re.IGNORECASE)
+    if m_hi_am:
+        g = m_hi_am.group(1).capitalize()
+        name = m_hi_am.group(2)
         enhanced.append({
-            "message": f'Add a comma after the greeting "{g}".',
-            "shortMessage": "Missing comma",
-            "replacements": [{"value": f"{g}, {w}"}],
-            "offset": m_greeting.start(),
-            "length": len(m_greeting.group(0)),
-            "rule": {"id": "GREETING_COMMA", "issueType": "grammar", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
+            "message": f'Did you mean "{g}, I\'m {name}"?',
+            "shortMessage": "Missing subject",
+            "replacements": [{"value": f"{g}, I'm {name}"}, {"value": f"{g}, I am {name}"}],
+            "offset": m_hi_am.start(),
+            "length": len(m_hi_am.group(0)),
+            "rule": {"id": "GREETING_IM_NAME", "issueType": "grammar", "category": {"id": "GRAMMAR", "name": "Grammar"}}
         })
+    else:
+        m_greeting = re.search(r'\b(Hello|Hi|Hey|Dear)\s+([A-Za-z\']+)', text, re.IGNORECASE)
+        if m_greeting and not text[m_greeting.start():].startswith(m_greeting.group(1) + ","):
+            g = m_greeting.group(1)
+            w = m_greeting.group(2)
+            enhanced.append({
+                "message": f'Add a comma after the greeting "{g}".',
+                "shortMessage": "Missing comma",
+                "replacements": [{"value": f"{g}, {w}"}],
+                "offset": m_greeting.start(),
+                "length": len(m_greeting.group(0)),
+                "rule": {"id": "GREETING_COMMA", "issueType": "grammar", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
+            })
 
     # 2. Question phrasing: "what to do", "so what to do"
     m_q = re.search(r'\b(so\s+)?(what to do)\b', text, re.IGNORECASE)

@@ -55,4 +55,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     return true;
   }
+
+  if (request.action === "autofix") {
+    const text = request.text || "";
+    const lang = request.language || "auto";
+
+    fetch("http://127.0.0.1:8082/api/autofix", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, language: lang })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        sendResponse({ success: true, fixed: data.fixed, count: data.count });
+      })
+      .catch((err) => {
+        sendResponse({ success: false, error: err.toString() });
+      });
+
+    return true;
+  }
 });

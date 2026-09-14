@@ -11,8 +11,8 @@ import urllib.error
 import urllib.request
 
 OLLAMA_HOST = "http://127.0.0.1:11434"
-MODEL_NAME = "phi3:mini"
-ALT_MODEL_NAMES = ["phi3", "phi3:latest", "phi3:3.8b", "llama3.2:1b", "qwen2.5:0.5b"]
+MODEL_NAME = "qwen2.5:1.5b"
+ALT_MODEL_NAMES = ["phi3:mini", "phi3", "qwen2.5:0.5b", "llama3.2:1b", "llama3.2:3b"]
 
 logger = logging.getLogger("OpenGrammarlyAI")
 
@@ -71,26 +71,28 @@ def check_ai_status() -> dict:
 
 
 def install_phi3_async():
-    """Trigger background pull of phi3:mini via Ollama."""
+    """Trigger background pull of local model via Ollama."""
     with _status_lock:
         if _cached_status.get("installing"):
             return {"status": "already_installing"}
         _cached_status["installing"] = True
         _cached_status["progress"] = 0
 
+    target = "qwen2.5:1.5b" if "qwen2.5:1.5b" not in get_available_models() else "phi3:mini"
+
     def _worker():
         global _cached_status
         try:
             req = urllib.request.Request(
                 f"{OLLAMA_HOST}/api/pull",
-                data=json.dumps({"name": MODEL_NAME, "stream": False}).encode("utf-8"),
+                data=json.dumps({"name": target, "stream": False}).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=600) as resp:
                 resp.read()
         except Exception as e:
-            logger.error(f"Failed to pull {MODEL_NAME}: {e}")
+            logger.error(f"Failed to pull {target}: {e}")
         finally:
             with _status_lock:
                 _cached_status["installing"] = False
@@ -98,20 +100,27 @@ def install_phi3_async():
 
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
-    return {"status": "started", "model": MODEL_NAME}
+    return {"status": "started", "model": target}
 
 
 def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = None) -> str:
     active = model or get_active_model() or MODEL_NAME
+    word_count = len(prompt.split())
+    max_tokens = max(48, min(180, word_count * 3))
+
     body = {
         "model": active,
         "prompt": prompt,
         "stream": False,
         "options": {
-            "temperature": 0.3,
+            "temperature": 0.1,
             "top_p": 0.9,
-            "num_predict": 256,
-            "stop": ["\n\nText to rewrite:", "\n\nOriginal:", "\n\nUser:", "<|end|>", "<|user|>", "<|system|>"],
+            "num_predict": max_tokens,
+            "stop": [
+                "<|end|>", "<|im_end|>", "<|user|>", "<|system|>",
+                "\n\nText to", "\nText to", "Text to correct:", "Text to rewrite:", "Text to translate:",
+                "\n\nOriginal:", "\n\n", "Translation:"
+            ],
         },
     }
     if system_prompt:
@@ -124,9 +133,15 @@ def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = Non
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30.0) as resp:
+    with urllib.request.urlopen(req, timeout=20.0) as resp:
         res = json.loads(resp.read().decode("utf-8"))
         out = res.get("response", "").strip()
+
+        # Stop token safety: clean synthetic few-shot loops
+        for delim in ["\n\nText to", "\nText to", "Text to correct:", "Text to rewrite:", "Text to translate:", "\n\nOriginal:"]:
+            if delim in out:
+                out = out.split(delim)[0].strip()
+
         if out.startswith('"') and out.endswith('"') and len(out) > 2:
             out = out[1:-1]
         return out
@@ -262,27 +277,36 @@ def ai_translate(text: str, target_lang: str, source_lang: str = "auto") -> dict
     }
     tgt = lang_names.get(target_lang.lower(), target_lang)
 
+    # For Arabic, Qwen2.5 is natively fluent and vastly superior to Phi-3
+    avail = get_available_models()
+    model = None
+    if target_lang.lower() == "ar":
+        for cand in ["qwen2.5:1.5b", "qwen2.5:0.5b", "qwen2.5:3b", "qwen2.5"]:
+            if any(cand in m for m in avail):
+                model = next(m for m in avail if cand in m)
+                break
+
     sys_prompt = (
-        f"You are a professional human translator. Translate the given text accurately and "
-        f"naturally into {tgt}. Capture all nuances, colloquialisms, and idioms faithfully. "
-        f"Output ONLY the translated text without notes, phonetic guides, or quotation marks."
+        f"You are a professional human translator. Translate into {tgt}. "
+        f"Output ONLY the direct translation without notes or quotes."
     )
-    user_prompt = f"Text to translate:\n{text.strip()}"
+    user_prompt = text.strip()
 
     try:
-        translated = _call_ollama_generate(user_prompt, system_prompt=sys_prompt)
+        translated = _call_ollama_generate(user_prompt, system_prompt=sys_prompt, model=model)
+        active_engine = model or get_active_model() or "local_ai"
         return {
             "original": text,
             "translated": translated,
             "target": target_lang,
-            "engine": "phi3",
+            "engine": active_engine,
             "status": "success",
         }
     except Exception as e:
         return {
             "original": text,
             "translated": "",
-            "engine": "phi3",
+            "engine": "local_ai",
             "error": str(e),
             "status": "error",
         }

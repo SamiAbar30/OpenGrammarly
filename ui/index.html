@@ -1053,9 +1053,14 @@
             <button class="tool-btn" id="btn-clear">🗑️ Clear</button>
           </div>
 
-          <button class="btn-autofix" id="btn-autofix">
-            <span>⚡ Auto-Fix All</span>
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-ai-generate" id="btn-ai-magic-fix" title="Use local AI to proofread and polish in 0.5s">
+              <span>✨ AI Polish</span>
+            </button>
+            <button class="btn-autofix" id="btn-autofix" title="Auto-fix detected mistakes">
+              <span>⚡ Auto-Fix All</span>
+            </button>
+          </div>
         </div>
 
         <div class="editor-container">
@@ -1259,9 +1264,9 @@ Their is no doubt that this tool is very helpfull.</textarea>
               <option value="pt">Portuguese</option>
               <option value="ar">Arabic</option>
             </select>
-            <label class="ai-toggle-label" title="Use local Phi-3-Mini AI for fluent neural translation">
+            <label class="ai-toggle-label" title="Use ultra-fast local neural AI for fluent, native translation">
               <input type="checkbox" id="check-use-ai-trans" checked>
-              <span>✨ Phi-3 AI</span>
+              <span>✨ Neural AI (Fast)</span>
             </label>
           </div>
           <div class="translate-box-tools">
@@ -1513,23 +1518,64 @@ Their is no doubt that this tool is very helpfull.</textarea>
       assistantCount.innerText = `Suggestions (${remaining})`;
     };
 
-    // Auto-fix All button
+    // Auto-fix All button (combines LanguageTool rules + AI smart fix if needed)
     document.getElementById('btn-autofix').addEventListener('click', async () => {
       let text = editor.value || "";
+      if (!text.trim()) return;
+      const autofixBtn = document.getElementById('btn-autofix');
+      autofixBtn.style.opacity = '0.7';
       try {
         const res = await fetch('/api/autofix', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: text, language: langSelect.value })
+          body: JSON.stringify({
+            text: text,
+            language: langSelect.value,
+            use_ai: currentMatches.length === 0
+          })
         });
         const data = await res.json();
-        editor.value = data.fixed || text;
-        updateStats();
-        runGrammarCheck();
+        if (data.fixed) {
+          editor.value = data.fixed;
+          updateStats();
+          runGrammarCheck();
+        }
       } catch (e) {
         console.error("Auto-fix failed:", e);
+      } finally {
+        autofixBtn.style.opacity = '1';
       }
     });
+
+    // Dedicated AI Polish button
+    const aiMagicBtn = document.getElementById('btn-ai-magic-fix');
+    if (aiMagicBtn) {
+      aiMagicBtn.addEventListener('click', async () => {
+        let text = editor.value || "";
+        if (!text.trim()) return;
+        const origContent = aiMagicBtn.innerHTML;
+        aiMagicBtn.innerHTML = '<span>✨ Polishing...</span>';
+        aiMagicBtn.disabled = true;
+        try {
+          const res = await fetch('/api/ai/fix', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+          });
+          const data = await res.json();
+          if (data.fixed) {
+            editor.value = data.fixed;
+            updateStats();
+            runGrammarCheck();
+          }
+        } catch (e) {
+          console.error("AI polish failed:", e);
+        } finally {
+          aiMagicBtn.innerHTML = origContent;
+          aiMagicBtn.disabled = false;
+        }
+      });
+    }
 
     // Fix Active App button
     document.getElementById('btn-fix-active').addEventListener('click', async () => {
@@ -1602,33 +1648,39 @@ Their is no doubt that this tool is very helpfull.</textarea>
     tabBtnRewrite.addEventListener('click', () => switchTab('rewrite'));
     tabBtnTranslate.addEventListener('click', () => switchTab('translate'));
 
-    // Check Local AI (Phi-3-Mini) Status
+    // Check Local AI Status
     async function checkAIStatus() {
       try {
         const res = await fetch('/api/ai/status');
         const data = await res.json();
         if (data.ollama_running && data.model_installed) {
-          aiStatusLabel.innerText = "Phi-3 AI Ready";
-          aiStatusPill.title = `Model active: ${data.active_model || 'phi3:mini'}`;
-          aiStatusPill.style.borderColor = "rgba(168, 85, 247, 0.4)";
+          const m = (data.active_model || 'Local AI').toUpperCase();
+          aiStatusLabel.innerText = `✨ ${m} Ready`;
+          aiStatusPill.title = `Active offline model: ${data.active_model}`;
+          aiStatusPill.style.borderColor = "rgba(168, 85, 247, 0.5)";
+          aiStatusPill.style.background = "rgba(168, 85, 247, 0.15)";
         } else if (data.installing) {
-          aiStatusLabel.innerText = "⏳ Downloading Phi-3...";
+          aiStatusLabel.innerText = "⏳ Downloading Model...";
           aiStatusPill.title = "Pulling model in background...";
         } else {
-          aiStatusLabel.innerText = "⚡ Setup Phi-3 AI";
-          aiStatusPill.title = "Ollama or Phi-3-Mini not detected. Click to auto-install.";
+          aiStatusLabel.innerText = "⚡ Setup Local AI";
+          aiStatusPill.title = "Ollama or model not detected. Click to auto-install.";
         }
       } catch (e) {}
     }
 
     aiStatusPill.addEventListener('click', async () => {
       try {
+        aiStatusLabel.innerText = "⏳ Checking...";
         const res = await fetch('/api/ai/setup', { method: 'POST' });
         const data = await res.json();
         if (data.status === 'started') {
           aiStatusLabel.innerText = "⏳ Starting Download...";
         }
-      } catch (e) {}
+        setTimeout(checkAIStatus, 1500);
+      } catch (e) {
+        checkAIStatus();
+      }
     });
 
     // ==========================================

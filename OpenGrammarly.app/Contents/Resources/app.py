@@ -274,6 +274,72 @@ def enhance_text_rules(text: str, matches: list) -> list:
             "rule": {"id": "SPACE_BEFORE_PUNCT", "issueType": "typographical", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
         })
 
+    # 7. Common typo: "ad" / "adn" -> "and"
+    for m in re.finditer(r'\b(ad|adn)\b', text, re.IGNORECASE):
+        word = m.group(1)
+        start = m.start()
+        end = m.end()
+        after = text[end:].lstrip().split()
+        next_word = after[0].lower().strip("?,.!;:") if after else ""
+        before = text[:start].rstrip().split()
+        prev_word = before[-1].lower().strip("?,.!;:") if before else ""
+
+        is_ad_context = prev_word in {"an", "the", "this", "that", "print", "run", "place", "create", "sponsored"} or next_word in {"blocker", "campaign", "agency", "network", "revenue"}
+        if word.lower() == "adn" or (not is_ad_context and (next_word in {"you", "u", "me", "i", "we", "they", "he", "she", "it", "the", "a", "an", "my", "your", "our", "their", "his", "her", "then", "also", "so", "now", "here", "there", "what", "how", "why", "where"} or prev_word in {"morocco", "me", "him", "her", "us", "them", "here", "there", "yes", "no"})):
+            is_cap = word[0].isupper()
+            rep = "And" if is_cap else "and"
+            enhanced.append({
+                "message": f'Common keyboard typo. Did you mean "{rep}"?',
+                "shortMessage": "Typo",
+                "replacements": [{"value": rep}],
+                "offset": start,
+                "length": end - start,
+                "rule": {"id": "TYPO_AD_AND", "issueType": "misspelling", "category": {"id": "TYPOS", "name": "Possible Typo"}}
+            })
+
+    # 8. Run-on clauses: "I'm [Name] I'm from [Place]" missing period or comma
+    for m in re.finditer(r"(\bI'm\s+[^,.!?\n]+?)(\s+)(I'm\b)", text):
+        enhanced.append({
+            "message": "Two independent clauses joined without punctuation. Insert a period.",
+            "shortMessage": "Run-on sentence",
+            "replacements": [{"value": ". "}],
+            "offset": m.start(2),
+            "length": len(m.group(2)),
+            "rule": {"id": "RUNON_CLAUSE_IM", "issueType": "grammar", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
+        })
+
+    # 9. Trailing question without mark: "(and|ad) you" at the end of a sentence
+    for m in re.finditer(r'\b(and|ad)\s+you\s*$', text, re.IGNORECASE):
+        enhanced.append({
+            "message": 'Missing question mark at the end of "and you?".',
+            "shortMessage": "Missing question mark",
+            "replacements": [{"value": "and you?"}],
+            "offset": m.start(),
+            "length": len(m.group(0)),
+            "rule": {"id": "MISSING_QUESTION_MARK_AND_YOU", "issueType": "typographical", "category": {"id": "PUNCTUATION", "name": "Punctuation"}}
+        })
+
+    # 10. Common keyboard slips: "gevig" -> "giving", "tooolong" -> "too long", "mabe" -> "maybe"
+    common_slips = {
+        r'\bgevig\b': 'giving',
+        r'\btooolong\b': 'too long',
+        r'\bmabe\b': 'maybe',
+        r'\bsegest\b': 'suggest',
+        r'\bdeferent\b': 'different',
+    }
+    for pat, rep in common_slips.items():
+        for m in re.finditer(pat, text, re.IGNORECASE):
+            word = m.group(0)
+            replacement = rep.capitalize() if word[0].isupper() else rep
+            enhanced.append({
+                "message": f'Typo. Did you mean "{replacement}"?',
+                "shortMessage": "Typo",
+                "replacements": [{"value": replacement}],
+                "offset": m.start(),
+                "length": len(word),
+                "rule": {"id": "COMMON_SLIP", "issueType": "misspelling", "category": {"id": "TYPOS", "name": "Possible Typo"}}
+            })
+
     # Filter out overlapping matches: prioritize specific contextual rules over generic spellcheck
     def sort_key(m):
         rule_id = m.get("rule", {}).get("id", "")
@@ -425,7 +491,16 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
         elif self.path == "/api/autofix":
             text = payload.get("text", "")
             lang = payload.get("language", "en-US")
+            use_ai = payload.get("use_ai", False)
             fixed, count = auto_correct_text(text, lang)
+            if (count == 0 or use_ai) and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                ai_res = ai_engine.ai_fix_grammar(text)
+                if ai_res.get("status") == "success" and ai_res.get("fixed"):
+                    ai_fixed = ai_res.get("fixed")
+                    if ai_fixed and ai_fixed.strip() != text.strip():
+                        fixed = ai_fixed
+                        count = 1
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -543,8 +618,9 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
 
-class ReusableTCPServer(socketserver.TCPServer):
+class ReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
 
 def start_server():

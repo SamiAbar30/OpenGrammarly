@@ -115,8 +115,8 @@ except Exception as e:
     print('Warning: Translation model download will continue in background:', e)
 " || true
 
-# Step 5: Setup Local AI Engine (Phi-3-Mini via Ollama)
-echo -e "${BLUE}[5/7] Setting up Local AI Engine (Phi-3-Mini via Ollama)...${NC}"
+# Step 5: Setup Local AI Engine (Ultra-Fast Multilingual SLM via Ollama)
+echo -e "${BLUE}[5/7] Setting up Local AI Engine (Qwen 2.5 / Phi-3 via Ollama)...${NC}"
 if ! command -v ollama &>/dev/null; then
     echo -e "${YELLOW}⚡ Installing Ollama for local neural rewriting & high-accuracy translation...${NC}"
     brew install ollama || true
@@ -125,8 +125,8 @@ fi
 if command -v ollama &>/dev/null; then
     echo -e "${YELLOW}⚡ Starting Ollama background service...${NC}"
     brew services start ollama || true
-    echo -e "${YELLOW}⚡ Pulling Phi-3-Mini model (lightweight, ~2GB, fast local SLM)...${NC}"
-    ollama pull phi3:mini || true
+    echo -e "${YELLOW}⚡ Pulling ultra-fast multilingual AI model (~980MB, Metal GPU accelerated)...${NC}"
+    ollama pull qwen2.5:1.5b || ollama pull phi3:mini || true
 fi
 
 # Step 6: Install Desktop App to /Applications

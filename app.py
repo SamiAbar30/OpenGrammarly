@@ -380,21 +380,23 @@ def check_grammar(text: str, language: str = "en-US") -> list:
 
 
 def auto_correct_text(text: str, language: str = "en-US") -> tuple[str, int]:
+    if not text:
+        return "", 0
     if language == "auto" or not language:
         language = detect_language(text)
     matches = check_grammar(text, language)
-    sorted_matches = sorted(matches, key=lambda m: m["offset"], reverse=True)
+    sorted_matches = sorted(matches, key=lambda m: m.get("offset", 0), reverse=True)
     corrected = list(text)
     last_end = len(text) + 1
     count = 0
 
     for m in sorted_matches:
-        start = m["offset"]
-        length = m["length"]
+        start = m.get("offset", 0)
+        length = m.get("length", 0)
         end = start + length
         reps = m.get("replacements", [])
-        if end <= last_end and reps:
-            best = reps[0]["value"]
+        if 0 <= start <= end <= len(text) and end <= last_end and reps:
+            best = reps[0].get("value", "")
             corrected[start:end] = list(best)
             last_end = start
             count += 1
@@ -417,221 +419,238 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        try:
+            parsed = urllib.parse.urlparse(self.path)
+            path = parsed.path
 
-        if path == "/api/status":
-            trusted = is_accessibility_trusted()
-            lt_online = False
+            if path == "/api/status":
+                trusted = is_accessibility_trusted()
+                lt_online = False
+                try:
+                    urllib.request.urlopen("http://localhost:8081/v2/languages", timeout=1)
+                    lt_online = True
+                except Exception:
+                    pass
+                res = {"lt_online": lt_online, "accessibility_trusted": trusted}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+                return
+
+            if path == "/api/languages":
+                supported = getattr(translate_engine, "SUPPORTED_LANGUAGES", []) if translate_engine else []
+                installed = translate_engine.get_installed_pairs() if translate_engine else []
+                res = {"supported": supported, "installed": installed}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+                return
+
+            if path == "/api/ai/status":
+                res = ai_engine.check_ai_status() if ai_engine else {"ollama_running": False, "model_installed": False}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+                return
+
+            # Static assets with path-traversal protection
+            if path in ("/", "/index.html"):
+                rel_file = "index.html"
+                mime = "text/html; charset=utf-8"
+            elif path == "/logo.png":
+                rel_file = "logo.png"
+                mime = "image/png"
+            else:
+                rel_file = path.lstrip("/")
+                mime = "text/plain"
+
+            safe_dir = os.path.realpath(UI_DIR)
+            target_path = os.path.realpath(os.path.join(UI_DIR, rel_file))
+
+            if target_path.startswith(safe_dir) and os.path.exists(target_path) and os.path.isfile(target_path):
+                self.send_response(200)
+                self.send_header("Content-Type", mime)
+                self.end_headers()
+                with open(target_path, "rb") as f:
+                    self.wfile.write(f.read())
+            else:
+                self.send_response(404)
+                self.end_headers()
+        except Exception as e:
+            logger.error(f"OpenGrammarly GET error on {self.path}: {e}")
             try:
-                urllib.request.urlopen("http://localhost:8081/v2/languages", timeout=1)
-                lt_online = True
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
             except Exception:
                 pass
-            res = {"lt_online": lt_online, "accessibility_trusted": trusted}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-            return
-
-        if path == "/api/languages":
-            supported = getattr(translate_engine, "SUPPORTED_LANGUAGES", []) if translate_engine else []
-            installed = translate_engine.get_installed_pairs() if translate_engine else []
-            res = {"supported": supported, "installed": installed}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-            return
-
-        if path == "/api/ai/status":
-            res = ai_engine.check_ai_status() if ai_engine else {"ollama_running": False, "model_installed": False}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-            return
-
-        # Static assets with path-traversal protection
-        if path in ("/", "/index.html"):
-            rel_file = "index.html"
-            mime = "text/html; charset=utf-8"
-        elif path == "/logo.png":
-            rel_file = "logo.png"
-            mime = "image/png"
-        else:
-            rel_file = path.lstrip("/")
-            mime = "text/plain"
-
-        safe_dir = os.path.realpath(UI_DIR)
-        target_path = os.path.realpath(os.path.join(UI_DIR, rel_file))
-
-        if target_path.startswith(safe_dir) and os.path.exists(target_path) and os.path.isfile(target_path):
-            self.send_response(200)
-            self.send_header("Content-Type", mime)
-            self.end_headers()
-            with open(target_path, "rb") as f:
-                self.wfile.write(f.read())
-        else:
-            self.send_response(404)
-            self.end_headers()
 
     def do_POST(self):
-        content_length = int(self.headers.get("Content-Length", 0))
-        # Enforce 1MB payload limit for stability and security
-        if content_length > 1_048_576:
-            self.send_response(413)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Payload exceeds 1MB limit"}).encode("utf-8"))
-            return
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            # Enforce 1MB payload limit for stability and security
+            if content_length > 1_048_576:
+                self.send_response(413)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Payload exceeds 1MB limit"}).encode("utf-8"))
+                return
 
-        body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else ""
-        payload = {}
-        if body:
+            body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else ""
+            payload = {}
+            if body:
+                try:
+                    payload = json.loads(body)
+                except Exception:
+                    pass
+
+            if self.path == "/api/check":
+                text = payload.get("text", "")
+                lang = payload.get("language", "en-US")
+                matches = check_grammar(text, lang)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"matches": matches}).encode("utf-8"))
+
+            elif self.path == "/api/autofix":
+                text = payload.get("text", "")
+                lang = payload.get("language", "en-US")
+                use_ai = payload.get("use_ai", False)
+                fixed, count = auto_correct_text(text, lang)
+                if (count == 0 or use_ai) and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                    ai_res = ai_engine.ai_fix_grammar(text)
+                    if ai_res.get("status") == "success" and ai_res.get("fixed"):
+                        ai_fixed = ai_res.get("fixed")
+                        if ai_fixed and ai_fixed.strip() != text.strip():
+                            fixed = ai_fixed
+                            count = 1
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"fixed": fixed, "count": count}).encode("utf-8"))
+
+            elif self.path == "/api/translate":
+                text = payload.get("text", "")
+                from_code = payload.get("from", "auto")
+                to_code = payload.get("to", "es")
+                use_ai = payload.get("use_ai", True)
+
+                # 1. Try local neural AI translation if available
+                if use_ai and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                    res = ai_engine.ai_translate(text, to_code, from_code)
+                    if res.get("status") == "success":
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json")
+                        self.end_headers()
+                        self.wfile.write(json.dumps(res).encode("utf-8"))
+                        return
+
+                # 2. Fallback to Argos Translate
+                if translate_engine:
+                    res = translate_engine.translate_text(text, from_code, to_code)
+                else:
+                    res = {"translated": text, "error": "Translation engine unavailable", "status": "error"}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+
+            elif self.path == "/api/ai/rewrite":
+                text = payload.get("text", "")
+                style = payload.get("style", "all")
+                if not ai_engine:
+                    res = {"error": "AI engine module unavailable", "status": "error"}
+                elif style == "all":
+                    res = ai_engine.rewrite_all_styles(text)
+                else:
+                    res = ai_engine.rewrite_style(text, style)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+
+            elif self.path == "/api/ai/fix":
+                text = payload.get("text", "")
+                if ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                    res = ai_engine.ai_fix_grammar(text)
+                else:
+                    fixed, count = auto_correct_text(text)
+                    res = {"original": text, "fixed": fixed, "count": count, "fallback": True, "status": "success"}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+
+            elif self.path == "/api/ai/setup":
+                res = ai_engine.install_phi3_async() if ai_engine else {"status": "error", "error": "AI engine missing"}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+
+            elif self.path == "/api/fix_active_app":
+                script = os.path.join(APP_DIR, "fix_selection.sh")
+                if not os.path.exists(script):
+                    script = os.path.join(APP_DIR, "Resources", "fix_selection.sh")
+                subprocess.run(["/bin/bash", script], check=False)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
+
+            elif self.path == "/api/paste_text":
+                text = payload.get("text", "")
+                if text:
+                    proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
+                    proc.communicate(text)
+                    script = """
+                    tell application "System Events"
+                        set frontmost of process "OpenGrammarly" to false
+                    end tell
+                    delay 0.15
+                    tell application "System Events"
+                        keystroke "v" using {command down}
+                    end tell
+                    """
+                    subprocess.run(["osascript", "-e", script], check=False)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "pasted"}).encode("utf-8"))
+
+            elif self.path == "/api/permissions/request":
+                request_accessibility_permission()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "requested"}).encode("utf-8"))
+
+            elif self.path == "/api/open_extension_folder":
+                ensure_extension_exported()
+                subprocess.run(["open", USER_EXTENSION_DIR], check=False)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "opened", "path": USER_EXTENSION_DIR}).encode("utf-8"))
+
+            else:
+                self.send_response(404)
+                self.end_headers()
+        except Exception as e:
+            logger.error(f"OpenGrammarly POST error on {self.path}: {e}")
             try:
-                payload = json.loads(body)
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
             except Exception:
                 pass
-
-        if self.path == "/api/check":
-            text = payload.get("text", "")
-            lang = payload.get("language", "en-US")
-            matches = check_grammar(text, lang)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"matches": matches}).encode("utf-8"))
-
-        elif self.path == "/api/autofix":
-            text = payload.get("text", "")
-            lang = payload.get("language", "en-US")
-            use_ai = payload.get("use_ai", False)
-            fixed, count = auto_correct_text(text, lang)
-            if (count == 0 or use_ai) and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
-                ai_res = ai_engine.ai_fix_grammar(text)
-                if ai_res.get("status") == "success" and ai_res.get("fixed"):
-                    ai_fixed = ai_res.get("fixed")
-                    if ai_fixed and ai_fixed.strip() != text.strip():
-                        fixed = ai_fixed
-                        count = 1
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"fixed": fixed, "count": count}).encode("utf-8"))
-
-        elif self.path == "/api/translate":
-            text = payload.get("text", "")
-            from_code = payload.get("from", "auto")
-            to_code = payload.get("to", "es")
-            use_ai = payload.get("use_ai", True)
-
-            # 1. Try Phi-3-Mini neural translation if available
-            if use_ai and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
-                res = ai_engine.ai_translate(text, to_code, from_code)
-                if res.get("status") == "success":
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json")
-                    self.end_headers()
-                    self.wfile.write(json.dumps(res).encode("utf-8"))
-                    return
-
-            # 2. Fallback to Argos Translate
-            if translate_engine:
-                res = translate_engine.translate_text(text, from_code, to_code)
-            else:
-                res = {"translated": text, "error": "Translation engine unavailable", "status": "error"}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-
-        elif self.path == "/api/ai/rewrite":
-            text = payload.get("text", "")
-            style = payload.get("style", "all")
-            if not ai_engine:
-                res = {"error": "AI engine module unavailable", "status": "error"}
-            elif style == "all":
-                res = ai_engine.rewrite_all_styles(text)
-            else:
-                res = ai_engine.rewrite_style(text, style)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-
-        elif self.path == "/api/ai/fix":
-            text = payload.get("text", "")
-            if ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
-                res = ai_engine.ai_fix_grammar(text)
-            else:
-                fixed, count = auto_correct_text(text)
-                res = {"original": text, "fixed": fixed, "count": count, "fallback": True, "status": "success"}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-
-        elif self.path == "/api/ai/setup":
-            res = ai_engine.install_phi3_async() if ai_engine else {"status": "error", "error": "AI engine missing"}
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
-
-        elif self.path == "/api/fix_active_app":
-            script = os.path.join(APP_DIR, "fix_selection.sh")
-            if not os.path.exists(script):
-                script = os.path.join(APP_DIR, "Resources", "fix_selection.sh")
-            subprocess.run(["/bin/bash", script], check=False)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
-
-        elif self.path == "/api/paste_text":
-            text = payload.get("text", "")
-            if text:
-                proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
-                proc.communicate(text)
-                script = """
-                tell application "System Events"
-                    set frontmost of process "OpenGrammarly" to false
-                end tell
-                delay 0.15
-                tell application "System Events"
-                    keystroke "v" using {command down}
-                end tell
-                """
-                subprocess.run(["osascript", "-e", script], check=False)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "pasted"}).encode("utf-8"))
-
-        elif self.path == "/api/permissions/request":
-            request_accessibility_permission()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "requested"}).encode("utf-8"))
-
-        elif self.path == "/api/open_extension_folder":
-            ensure_extension_exported()
-            subprocess.run(["open", USER_EXTENSION_DIR], check=False)
-            # Copy path to clipboard for instant pasting if needed
-            p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
-            p.communicate(USER_EXTENSION_DIR)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "opened", "path": USER_EXTENSION_DIR}).encode("utf-8"))
-
-        else:
-            self.send_response(404)
-            self.end_headers()
 
 
 class ReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

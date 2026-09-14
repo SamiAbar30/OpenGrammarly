@@ -12,7 +12,7 @@ import urllib.request
 
 OLLAMA_HOST = "http://127.0.0.1:11434"
 MODEL_NAME = "qwen2.5:1.5b"
-ALT_MODEL_NAMES = ["phi3:mini", "phi3", "qwen2.5:0.5b", "llama3.2:1b", "llama3.2:3b"]
+ALT_MODEL_NAMES = ["qwen2.5:3b", "phi3:mini", "llama3.2:3b", "qwen2.5:0.5b"]
 
 logger = logging.getLogger("OpenGrammarlyAI")
 
@@ -271,37 +271,52 @@ def rewrite_all_styles(text: str) -> dict:
 
     # Attempt 1: Ultra-fast single-pass JSON generation (~1-1.5s total)
     prompt = (
-        f"Rewrite the following text into 4 distinct styles:\n"
-        f"- formal: professional business tone, no email greetings or sign-offs\n"
+        f"Rewrite the following sentence into 5 distinct styles:\n"
+        f"- formal: professional business tone. Do NOT output email greetings like 'Dear' or sign-offs\n"
         f"- casual: friendly, warm, natural conversational tone\n"
         f"- concise: short, direct, eliminating all filler words\n"
-        f"- confident: assertive, decisive, eliminate passive voice and apologies\n\n"
-        f"Input text: \"{text.strip()}\"\n\n"
+        f"- confident: assertive, decisive, eliminate passive voice and apologies\n"
+        f"- academic: articulate, scholarly tone with sophisticated vocabulary\n\n"
+        f"Input sentence: \"{text.strip()}\"\n\n"
+        f"CRITICAL: Output ONLY a JSON object with keys: formal, casual, concise, confident, academic. Each value must be a direct sentence rewrite, NEVER greetings or sign-offs.\n"
         f"Example JSON structure:\n"
-        f"{{\"formal\": \"text here\", \"casual\": \"text here\", \"concise\": \"text here\", \"confident\": \"text here\"}}"
+        f"{{\"formal\": \"...\", \"casual\": \"...\", \"concise\": \"...\", \"confident\": \"...\", \"academic\": \"...\"}}"
     )
     sys_prompt = (
         "You are an expert writing assistant. You must respond strictly in valid JSON format "
-        "with keys: formal, casual, concise, confident. Output ONLY valid JSON, no markdown formatting."
+        "with keys: formal, casual, concise, confident, academic. Output ONLY valid JSON with direct sentence rewrites, no markdown formatting."
     )
 
     try:
         raw_json = _call_ollama_generate(prompt, system_prompt=sys_prompt, response_format="json")
-        styles = json.loads(raw_json)
+        raw_clean = raw_json.strip()
+        if raw_clean.startswith("```"):
+            lines = raw_clean.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            raw_clean = "\n".join(lines).strip()
+        s_idx = raw_clean.find("{")
+        e_idx = raw_clean.rfind("}")
+        if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+            raw_clean = raw_clean[s_idx:e_idx+1]
+
+        styles = json.loads(raw_clean)
         clean_styles = {}
-        for k in ["formal", "casual", "concise", "confident"]:
+        for k in ["formal", "casual", "concise", "confident", "academic"]:
             extracted = _extract_text(styles.get(k))
-            if extracted:
+            if extracted and not (extracted.startswith("Dear ") and len(extracted) < 25) and "[Recipient]" not in extracted:
                 clean_styles[k] = extracted
             else:
-                clean_styles[k] = text.strip()
+                clean_styles[k] = rewrite_style(text, k).get("rewritten", text.strip())
         return {"original": text, "styles": clean_styles, "status": "success"}
     except Exception as e:
         logger.warning(f"Single pass JSON rewrite failed, falling back to sequential: {e}")
 
     # Fallback: Sequential generation
     results = {}
-    for style in ["formal", "casual", "concise", "confident"]:
+    for style in ["formal", "casual", "concise", "confident", "academic"]:
         res = rewrite_style(text, style)
         results[style] = res.get("rewritten", text)
 
@@ -356,19 +371,24 @@ def ai_translate(text: str, target_lang: str, source_lang: str = "auto") -> dict
         "ar": "Modern Standard Arabic (العربية)",
         "en": "English",
         "ru": "Russian",
-        "zh": "Chinese",
+        "zh": "Simplified Chinese",
         "ja": "Japanese",
+        "ko": "Korean",
+        "nl": "Dutch",
+        "pl": "Polish",
+        "tr": "Turkish",
+        "sv": "Swedish",
     }
-    tgt = lang_names.get(target_lang.lower(), target_lang)
+    norm_lang = target_lang.lower().split("-")[0].split("_")[0]
+    tgt = lang_names.get(norm_lang, lang_names.get(target_lang.lower(), target_lang))
 
-    # For Arabic, Qwen2.5 is natively fluent and vastly superior to Phi-3
     avail = get_available_models()
     model = None
-    if target_lang.lower() == "ar":
-        for cand in ["qwen2.5:1.5b", "qwen2.5:0.5b", "qwen2.5:3b", "qwen2.5"]:
-            if any(cand in m for m in avail):
-                model = next(m for m in avail if cand in m)
-                break
+    # Prefer Qwen 2.5 models if available
+    for cand in ["qwen2.5:1.5b", "qwen2.5:0.5b", "qwen2.5:3b", "qwen2.5"]:
+        if any(cand in m for m in avail):
+            model = next(m for m in avail if cand in m)
+            break
 
     sys_prompt = (
         f"You are a professional human translator. Translate into {tgt}. "

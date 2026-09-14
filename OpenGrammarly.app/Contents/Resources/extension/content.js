@@ -517,7 +517,7 @@
         <div class="gl-ai-section">
           <div class="gl-translate-header">
             <span class="gl-translate-title" style="color: #c084fc;">✨ AI Tone & Rewrite</span>
-            <span class="gl-ai-badge">Phi-3-Mini</span>
+            <span class="gl-ai-badge">Qwen 2.5</span>
           </div>
           <div class="gl-style-chips">
             <button class="gl-chip-style" data-style="formal">👔 Formal</button>

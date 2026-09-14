@@ -6,18 +6,44 @@
   <title>OpenGrammarly</title>
   <style>
     :root {
-      --bg-canvas: #0f172a;
-      --bg-panel: #1e293b;
-      --bg-card: #283548;
-      --bg-hover: #334155;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg-canvas: #090d16;
+      --bg-surface: #101623;
+      --bg-card: #172033;
+      --bg-card-hover: #1e2a42;
+      --bg-glass: rgba(16, 22, 35, 0.78);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.14);
+      --border-focus: rgba(99, 102, 241, 0.6);
+      
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --brand: #10b981;
-      --brand-hover: #059669;
-      --err-grammar: #3b82f6;
-      --err-spelling: #f43f5e;
-      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      --text-dim: #64748b;
+      
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      --accent-glow: rgba(99, 102, 241, 0.28);
+      
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.2);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.2);
+      --sky: #38bdf8;
+      --sky-glow: rgba(56, 189, 248, 0.2);
+      --pink: #ec4899;
+      
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * {
@@ -29,188 +55,866 @@
     body {
       background-color: var(--bg-canvas);
       color: var(--text-main);
-      font-family: var(--font-family);
+      font-family: var(--font-sans);
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
-      position: relative;
+      user-select: none;
     }
 
-    /* Top Bar */
+    /* ============================================================
+       TOP APPLICATION HEADER
+       ============================================================ */
     header {
-      height: 60px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
+      height: 58px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      padding: 0 18px;
       flex-shrink: 0;
+      z-index: 50;
     }
 
-    .brand {
+    .brand-section {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    .brand-logo-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-logo-wrap img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .brand-name {
+      font-size: 15px;
       font-weight: 700;
-      font-size: 17px;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .brand img {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    .version-tag {
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 2px 6px;
+      border-radius: 6px;
     }
 
-    .status-pill {
+    .brand-subtext {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* Segmented Navigation Control */
+    .nav-segmented-wrap {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      padding: 3px;
+      border-radius: var(--radius-md);
+      gap: 4px;
+    }
+
+    .nav-seg-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
       display: flex;
       align-items: center;
       gap: 7px;
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      color: #34d399;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 20px;
+      transition: var(--transition);
     }
 
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      background: #10b981;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
+    .nav-seg-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
     }
 
+    .nav-seg-btn.active {
+      background: var(--bg-card);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-light);
+    }
+
+    /* Right Header Controls */
     .header-actions {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .lang-select {
-      background: var(--bg-card);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      outline: none;
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: var(--radius-full);
       cursor: pointer;
+      transition: var(--transition);
     }
 
-    .btn-extension {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+    .status-pill:hover {
+      background: rgba(16, 185, 129, 0.18);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    .lang-select-header {
+      background: var(--bg-surface);
       color: var(--text-main);
-      padding: 7px 13px;
-      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .lang-select-header:focus, .lang-select-header:hover {
+      border-color: var(--border-light);
+    }
+
+    .btn-header-ghost {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s ease;
-    }
-    .btn-extension:hover {
-      background: var(--bg-hover);
-      border-color: rgba(255, 255, 255, 0.2);
+      transition: var(--transition);
     }
 
-    .btn-fix-active {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      border: none;
-      padding: 7px 15px;
-      border-radius: 8px;
-      font-size: 13px;
+    .btn-header-ghost:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-light);
+    }
+
+    .shortcut-pill {
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ============================================================
+       VIEW PANELS CONTAINER
+       ============================================================ */
+    .view-panel {
+      display: none;
+      flex: 1;
+      height: calc(100vh - 58px);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* ============================================================
+       TAB 1: ✍️ PROOFREAD WORKSPACE
+       ============================================================ */
+    .proofread-workspace {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Left: Editor Section */
+    .editor-section {
+      flex: 1.25;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      height: 48px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.01);
+      flex-shrink: 0;
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-tool {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
       font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
+    }
+
+    .btn-tool:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-autofix {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-      transition: all 0.2s ease;
-    }
-    .btn-fix-active:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 4px 14px var(--emerald-glow);
+      transition: var(--transition);
     }
 
-    /* Header Navigation Tabs */
-    .nav-tabs {
+    .btn-autofix:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px var(--emerald-glow);
+    }
+
+    .btn-autofix .badge {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+
+    .btn-ai-polish {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 3px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      gap: 4px;
+      gap: 6px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: var(--transition);
     }
 
-    .nav-tab {
+    .btn-ai-polish:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+
+    .btn-ai-polish:disabled, .btn-autofix:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .editor-canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .writing-textarea {
+      width: 100%;
+      height: 100%;
       background: transparent;
       border: none;
+      outline: none;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 15.5px;
+      line-height: 1.7;
+      padding: 24px 28px;
+      resize: none;
+      user-select: text;
+    }
+
+    .writing-textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .editor-statusbar {
+      height: 44px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.15);
+      font-size: 12px;
       color: var(--text-muted);
-      padding: 6px 14px;
-      border-radius: 7px;
+      flex-shrink: 0;
+    }
+
+    .doc-metrics {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .doc-health-widget {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .score-ring-wrap {
+      position: relative;
+      width: 30px;
+      height: 30px;
+    }
+
+    .score-ring-svg {
+      transform: rotate(-90deg);
+      width: 30px;
+      height: 30px;
+    }
+
+    .score-ring-bg {
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 3.2;
+      fill: none;
+    }
+
+    .score-ring-fill {
+      stroke: var(--emerald);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 88;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
+    }
+
+    .score-num-label {
+      font-weight: 700;
       font-size: 13px;
+      color: var(--emerald);
+    }
+
+    /* Right: Suggestions Sidebar */
+    .sidebar-section {
+      flex: 0.95;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-filter {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .chip-filter:hover {
+      color: var(--text-main);
+      border-color: var(--border-light);
+    }
+
+    .chip-filter.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+    }
+
+    .cards-scroll-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .suggestion-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      animation: cardEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes cardEnter {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .suggestion-card:hover {
+      border-color: var(--border-light);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .issue-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 2.5px 8px;
+      border-radius: 6px;
+    }
+
+    .issue-badge.spelling {
+      background: var(--rose-glow);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .issue-badge.grammar {
+      background: var(--amber-glow);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .issue-badge.style {
+      background: var(--accent-glow);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .rule-tag {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      font-family: monospace;
+    }
+
+    .diff-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+    }
+
+    .diff-err {
+      color: #fb7185;
+      text-decoration: line-through;
+      font-weight: 600;
+    }
+
+    .diff-arrow {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .diff-fix {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .card-message-text {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .card-cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .btn-apply-suggestion {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-apply-suggestion:hover {
+      background: var(--emerald);
+      color: #ffffff;
+      box-shadow: 0 4px 12px var(--emerald-glow);
+    }
+
+    .btn-dismiss-card {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-dismiss-card:hover {
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Empty state */
+    .empty-suggestions-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 32px;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-art-icon {
+      font-size: 40px;
+      filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.3));
+    }
+
+    .empty-headline {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    /* ============================================================
+       TAB 2: ✨ TONE & REWRITE WORKSPACE
+       ============================================================ */
+    .rewrite-workspace {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .rewrite-input-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      height: 100%;
+    }
+
+    .rewrite-proposals-col {
+      flex: 1.25;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .proposals-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .tone-selector-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-tone-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 7px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: var(--transition);
     }
 
-    .nav-tab:hover {
+    .btn-tone-chip:hover {
       color: var(--text-main);
+      border-color: var(--border-light);
+      background: var(--bg-card-hover);
+    }
+
+    .btn-tone-chip.active {
+      border-color: var(--accent-primary);
+      background: rgba(99, 102, 241, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-generate-all {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+      transition: var(--transition);
+    }
+
+    .btn-generate-all:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+
+    .proposals-card-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tone-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .tone-card:hover {
+      border-color: var(--border-light);
+      box-shadow: var(--shadow-md);
+    }
+
+    .tone-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tone-pill-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .tone-pill-badge.formal { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .tone-pill-badge.casual { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .tone-pill-badge.concise { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tone-pill-badge.confident { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .tone-pill-badge.academic { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+    .tone-persona-desc {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .tone-body-text {
+      font-size: 14.5px;
+      line-height: 1.6;
+      color: var(--text-main);
+      user-select: text;
+      white-space: pre-wrap;
+    }
+
+    .tone-footer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+    }
+
+    .word-delta-chip {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .tone-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action-ghost {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 5px 11px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
+    }
+
+    .btn-action-ghost:hover {
+      color: var(--text-main);
+      border-color: var(--border-light);
       background: rgba(255, 255, 255, 0.04);
     }
 
-    .nav-tab.active {
-      background: var(--bg-panel);
-      color: var(--text-main);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    }
-
-    .nav-offline-pill {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #34d399;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 10px;
+    .btn-apply-doc {
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #c7d2fe;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    /* View Panels */
-    .view-panel {
+      cursor: pointer;
       display: flex;
-      flex: 1;
-      height: calc(100vh - 60px);
-      overflow: hidden;
-      width: 100%;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
     }
 
-    /* Main Workspace */
-    .workspace {
-      display: flex;
-      flex: 1;
-      height: 100%;
-      overflow: hidden;
-      width: 100%;
+    .btn-apply-doc:hover {
+      background: var(--accent-primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px var(--accent-glow);
     }
 
-    /* 🌐 DeepL Translation Workspace */
+    /* ============================================================
+       TAB 3: 🌐 NEURAL TRANSLATE WORKSPACE
+       ============================================================ */
     .translate-workspace {
       display: flex;
       flex: 1;
@@ -223,472 +927,133 @@
       max-width: 1400px;
       margin: 0 auto;
       width: 100%;
-      box-sizing: border-box;
     }
 
-    .translate-box {
+    .trans-pane {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
       overflow: hidden;
-      transition: border-color 0.2s ease;
+      transition: var(--transition);
     }
 
-    .translate-box:focus-within {
-      border-color: rgba(59, 130, 246, 0.45);
+    .trans-pane:focus-within {
+      border-color: var(--border-focus);
     }
 
-    .translate-box-header {
+    .trans-pane-header {
       padding: 12px 18px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: rgba(255, 255, 255, 0.02);
     }
 
-    .lang-selector-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .lang-select-deepl {
+    .trans-select {
       background: var(--bg-card);
       color: var(--text-main);
-      border: 1px solid var(--border);
-      padding: 7px 14px;
-      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 600;
       outline: none;
       cursor: pointer;
     }
 
-    .detected-pill {
-      font-size: 11px;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #60a5fa;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .translate-box-tools {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .translate-divider {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-    }
-
-    .btn-swap-langs {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    }
-
-    .btn-swap-langs:hover {
-      background: var(--bg-hover);
-      border-color: #3b82f6;
-      color: #60a5fa;
-      transform: scale(1.08) rotate(180deg);
-    }
-
-    .translate-textarea-wrapper {
+    .trans-textarea {
       flex: 1;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .translate-textarea-wrapper textarea {
       width: 100%;
-      height: 100%;
       background: transparent;
       border: none;
       outline: none;
-      font-size: 17px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 15px;
       line-height: 1.65;
-      color: var(--text-main);
-      font-family: var(--font-family);
+      padding: 20px 24px;
       resize: none;
+      user-select: text;
     }
 
-    .translate-textarea-wrapper textarea::placeholder {
-      color: #475569;
-    }
-
-    .translate-box-footer {
-      padding: 12px 18px;
-      border-top: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.015);
+    .trans-divider-col {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .engine-badge {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: #94a3b8;
-      font-size: 11px;
-    }
-
-    .translation-meta {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #10b981;
-      font-weight: 500;
-    }
-
-    .status-indicator-dot {
-      width: 6px;
-      height: 6px;
-      background: #10b981;
-      border-radius: 50%;
-    }
-
-    .translate-spinner {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 6px 12px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #60a5fa;
-      font-weight: 500;
-    }
-
-    .spinner-dot {
-      width: 8px;
-      height: 8px;
-      border: 2px solid #60a5fa;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Editor Side */
-    .editor-section {
-      flex: 1.25;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border);
-      background: var(--bg-canvas);
-    }
-
-    .editor-toolbar {
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .editor-tools {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tool-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .tool-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-main);
-    }
-
-    .btn-autofix {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      border: none;
-      padding: 7px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-      transition: all 0.2s ease;
-    }
-    .btn-autofix:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
-    }
-
-    .editor-container {
-      flex: 1;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #editor {
-      width: 100%;
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      font-size: 17px;
-      line-height: 1.7;
-      color: var(--text-main);
-      font-family: var(--font-family);
-      resize: none;
-    }
-
-    .editor-footer {
-      padding: 12px 20px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-panel);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .score-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 600;
-      color: var(--brand);
-    }
-
-    /* Assistant / Cards Side */
-    .assistant-section {
-      flex: 0.95;
-      background: var(--bg-panel);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .assistant-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .assistant-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.2px;
-    }
-
-    .cards-container {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Suggestion Card */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .card:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .category-chip {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.5px;
-    }
-    .cat-spelling {
-      background: rgba(244, 63, 94, 0.15);
-      color: #fb7185;
-      border: 1px solid rgba(244, 63, 94, 0.3);
-    }
-    .cat-grammar {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-
-    .error-preview {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-    .error-word {
-      color: #fb7185;
-      text-decoration: line-through;
-    }
-    .arrow {
-      color: var(--text-muted);
-    }
-    .fix-word {
-      color: #34d399;
-    }
-
-    .card-message {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .card-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .btn-apply-fix {
-      background: var(--brand);
-      color: white;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-apply-fix:hover {
-      background: var(--brand-hover);
-    }
-
-    .btn-dismiss {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      transition: color 0.15s;
-    }
-    .btn-dismiss:hover {
-      color: var(--text-main);
-      background: var(--bg-hover);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 40px;
-    }
-    .empty-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-    }
-    .empty-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-    .empty-desc {
-      font-size: 13px;
-      line-height: 1.5;
     }
 
-    /* Modal Overlay */
+    .btn-swap-pill {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-swap-pill:hover {
+      transform: scale(1.08) rotate(180deg);
+      color: #ffffff;
+      border-color: var(--border-light);
+      background: var(--bg-card-hover);
+    }
+
+    .trans-pane-footer {
+      height: 42px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.15);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ============================================================
+       MODALS & DIALOGS
+       ============================================================ */
     .modal-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 100;
+      animation: fadeIn 0.2s ease forwards;
     }
 
-    .modal-card {
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 28px;
-      width: 480px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 520px;
+      padding: 26px 28px;
+      box-shadow: var(--shadow-lg);
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes modal-in {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+      gap: 18px;
+      position: relative;
     }
 
     .modal-header {
@@ -700,510 +1065,371 @@
     .modal-title {
       font-size: 18px;
       font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .modal-close {
+    .btn-close-modal {
       background: transparent;
       border: none;
-      color: var(--text-muted);
-      font-size: 20px;
+      color: var(--text-dim);
+      font-size: 18px;
       cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
     }
 
-    .step-item {
-      background: #283548;
-      border-radius: 10px;
-      padding: 14px;
+    .btn-close-modal:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-step-row {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      background: var(--bg-card);
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
     }
 
-    .step-num {
-      width: 24px;
-      height: 24px;
+    .step-badge {
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      background: var(--brand);
-      color: white;
-      font-weight: 700;
-      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
       flex-shrink: 0;
     }
 
-    .step-content h4 {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 4px;
+    .step-text h4 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 3px;
     }
-    .step-content p {
+
+    .step-text p {
       font-size: 12px;
       color: var(--text-muted);
       line-height: 1.4;
     }
 
-    .btn-modal-primary {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
+    .btn-modal-cta {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
       border: none;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-    }
-    .btn-modal-primary:hover {
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-    }
-
-    /* ✨ AI Styles & Tone Navigation & Badges */
-    .nav-ai-pill {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(59, 130, 246, 0.25));
-      border: 1px solid rgba(168, 85, 247, 0.45);
-      color: #c084fc;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .ai-status-pill {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(168, 85, 247, 0.12);
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      color: #d8b4fe;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .ai-status-pill:hover {
-      background: rgba(168, 85, 247, 0.2);
-      border-color: rgba(168, 85, 247, 0.5);
-    }
-
-    .ai-status-dot {
-      width: 7px;
-      height: 7px;
-      background: #a855f7;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #a855f7;
-    }
-
-    /* ✨ AI Rewrite Workspace */
-    .rewrite-workspace {
-      display: flex;
-      flex: 1;
-      height: 100%;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .rewrite-sidebar {
-      width: 440px;
-      background: var(--bg-panel);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .rewrite-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .rewrite-cards-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .style-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      transition: all 0.2s ease;
-    }
-
-    .style-card:hover {
-      border-color: rgba(168, 85, 247, 0.4);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    }
-
-    .style-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .style-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #c084fc;
-      background: rgba(168, 85, 247, 0.12);
-      border: 1px solid rgba(168, 85, 247, 0.25);
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
-
-    .style-card-desc {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .style-card-text {
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
       font-size: 13.5px;
-      line-height: 1.5;
-      color: var(--text-main);
-      user-select: text;
-      white-space: pre-wrap;
-      min-height: 24px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: var(--transition);
+      margin-top: 6px;
     }
 
-    .style-card-actions {
+    .btn-modal-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+
+    /* Floating Toast System */
+    .toast-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      background: rgba(23, 32, 51, 0.95);
+      border: 1px solid var(--border-light);
+      backdrop-filter: blur(16px);
+      color: #ffffff;
+      padding: 9px 18px;
+      border-radius: var(--radius-full);
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
       display: flex;
       align-items: center;
       gap: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 200;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
     }
 
-    .style-btn-action {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.15s ease;
-    }
-
-    .style-btn-action:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-main);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .style-btn-action.primary {
-      background: linear-gradient(135deg, #8b5cf6, #6366f1);
-      color: white;
-      border: none;
-    }
-    .style-btn-action.primary:hover {
-      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
-    }
-
-    .ai-toggle-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #c084fc;
-      background: rgba(168, 85, 247, 0.12);
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      padding: 4px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .ai-toggle-label input {
-      accent-color: #a855f7;
-      cursor: pointer;
-    }
-
-    .btn-ai-generate {
-      background: linear-gradient(135deg, #a855f7, #6366f1);
-      color: white;
-      border: none;
-      padding: 7px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.35);
-      transition: all 0.2s ease;
-    }
-    .btn-ai-generate:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(168, 85, 247, 0.45);
-    }
-
-    .style-quick-chips {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .style-quick-chip {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.15s ease;
-    }
-    .style-quick-chip:hover {
-      background: rgba(168, 85, 247, 0.18);
-      border-color: #a855f7;
-      color: #d8b4fe;
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation Header -->
+  <!-- Top Application Header -->
   <header>
-    <div class="brand">
-      <img src="logo.png" alt="OpenGrammarly Logo">
-      <span>OpenGrammarly</span>
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span id="server-status">All Systems Online</span>
+    <div class="brand-section">
+      <div class="brand-logo-wrap">
+        <img src="/logo.png" alt="OpenGrammarly" onerror="this.style.display='none'">
       </div>
-      <div class="ai-status-pill" id="ai-status-pill" title="Local Phi-3-Mini Offline AI">
-        <span class="ai-status-dot"></span>
-        <span id="ai-status-label">Phi-3 AI Ready</span>
+      <div class="brand-titles">
+        <div class="brand-name">
+          OpenGrammarly
+          <span class="version-tag">v2.2</span>
+        </div>
+        <div class="brand-subtext">100% Offline • Private AI</div>
       </div>
     </div>
 
-    <div class="nav-tabs">
-      <button class="nav-tab active" id="tab-btn-grammar">
-        <span>✍️ Grammar & Style</span>
+    <!-- Centered Segmented Navigation -->
+    <div class="nav-segmented-wrap">
+      <button class="nav-seg-btn active" id="tab-btn-proofread" data-tab="proofread">
+        <span>✍️ Proofread</span>
       </button>
-      <button class="nav-tab" id="tab-btn-rewrite">
-        <span>✨ AI Styles & Rewrite</span>
-        <span class="nav-ai-pill">Phi-3-Mini</span>
+      <button class="nav-seg-btn" id="tab-btn-rewrite" data-tab="rewrite">
+        <span>✨ Tone & Rewrite</span>
       </button>
-      <button class="nav-tab" id="tab-btn-translate">
-        <span>🌐 DeepL Translator</span>
-        <span class="nav-offline-pill">100% Offline</span>
+      <button class="nav-seg-btn" id="tab-btn-translate" data-tab="translate">
+        <span>🌐 Translate</span>
       </button>
     </div>
 
+    <!-- Header Actions -->
     <div class="header-actions">
-      <select class="lang-select" id="lang-select">
+      <div class="status-pill" id="ai-status-indicator" title="Local AI Engine Status">
+        <span class="status-dot"></span>
+        <span id="ai-status-label">Qwen 2.5 Active</span>
+      </div>
+
+      <select class="lang-select-header" id="lang-select" title="Document Proofreading Language">
         <option value="en-US">English (US)</option>
         <option value="en-GB">English (UK)</option>
-        <option value="de-DE">German (DE)</option>
-        <option value="fr">French (FR)</option>
-        <option value="es">Spanish (ES)</option>
+        <option value="de-DE">German (Deutsch)</option>
+        <option value="fr">French (Français)</option>
+        <option value="es">Spanish (Español)</option>
+        <option value="auto">Auto-detect</option>
       </select>
 
-      <button class="btn-extension" id="btn-show-extension" title="Add floating widget to Chrome / Brave / Edge">
-        <span>🧩 Chrome Extension</span>
+      <button class="btn-header-ghost" id="btn-open-ext-modal" title="Connect to Chrome / Edge / Brave">
+        <span>🧩 Extension</span>
       </button>
 
-      <button class="btn-fix-active" id="btn-fix-active" title="Auto-fix selected text in Safari, Chrome, Notes, Slack...">
-        <span>🎯 Fix Active App (⌘⇧G)</span>
-      </button>
+      <div class="shortcut-pill" title="Global Quick Fix: Select text anywhere on Mac and press ⌘⌥G">
+        ⌘⌥G
+      </div>
     </div>
   </header>
 
-  <!-- Grammar & Style View -->
-  <div id="view-grammar" class="view-panel">
-    <div class="workspace">
-      <!-- Left: Rich Text Editor -->
+  <!-- TAB 1: ✍️ PROOFREAD VIEW -->
+  <div class="view-panel active" id="view-proofread">
+    <div class="proofread-workspace">
+      <!-- Left: Editor Canvas -->
       <div class="editor-section">
         <div class="editor-toolbar">
-          <div class="editor-tools">
-            <button class="tool-btn" id="btn-paste">📋 Paste</button>
-            <button class="tool-btn" id="btn-copy">📑 Copy</button>
-            <button class="tool-btn" id="btn-clear">🗑️ Clear</button>
+          <div class="tool-group">
+            <button class="btn-tool" id="btn-ed-paste">📋 Paste</button>
+            <button class="btn-tool" id="btn-ed-copy">📑 Copy</button>
+            <button class="btn-tool" id="btn-ed-clear">🗑️ Clear</button>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn-ai-generate" id="btn-ai-magic-fix" title="Use local AI to proofread and polish in 0.5s">
+          <div class="tool-group">
+            <button class="btn-ai-polish" id="btn-ed-ai-polish" title="Instant neural polish via local Qwen 2.5">
               <span>✨ AI Polish</span>
             </button>
-            <button class="btn-autofix" id="btn-autofix" title="Auto-fix detected mistakes">
+            <button class="btn-autofix" id="btn-ed-autofix" title="Fix all detected errors in 1 click">
               <span>⚡ Auto-Fix All</span>
+              <span class="badge" id="autofix-count-badge">0</span>
             </button>
           </div>
         </div>
 
-        <div class="editor-container">
-          <textarea id="editor" placeholder="Type or paste any text here to instantly detect mistakes..." spellcheck="false">This are an example sentence with a grammatical mistake.
-LanguageTool can easily finds errors in spelling, grammer, and punctuation.
-Their is no doubt that this tool is very helpfull.</textarea>
+        <div class="editor-canvas-wrap">
+          <textarea class="writing-textarea" id="main-editor" placeholder="Type or paste your text here to instantly inspect grammar, spelling, and phrasing..." spellcheck="false"></textarea>
         </div>
 
-        <div class="editor-footer">
-          <div style="display: flex; gap: 16px;">
-            <span id="stat-words">0 words</span>
-            <span id="stat-chars">0 characters</span>
+        <div class="editor-statusbar">
+          <div class="doc-metrics">
+            <span id="stat-word-count">0 words</span>
+            <span>•</span>
+            <span id="stat-char-count">0 chars</span>
+            <span>•</span>
+            <span id="stat-read-time">~0s read</span>
           </div>
-          <div class="score-badge">
-            <span>Overall Score:</span>
-            <span id="score-val">--</span>
+
+          <div class="doc-health-widget">
+            <div class="score-ring-wrap">
+              <svg class="score-ring-svg" viewBox="0 0 36 36">
+                <path class="score-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="score-ring-fill" id="score-ring-indicator" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+            <div>Score: <strong class="score-num-label" id="score-val-label">100</strong></div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Grammarly Suggestions Sidebar -->
-      <div class="assistant-section">
-        <div class="assistant-header">
-          <div class="assistant-title" id="assistant-count">Suggestions (0)</div>
+      <!-- Right: Suggestions Sidebar -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">
+          <div class="filter-chips">
+            <button class="chip-filter active" data-filter="all">All (<span id="filter-all-count">0</span>)</button>
+            <button class="chip-filter" data-filter="spelling">Spelling (<span id="filter-spell-count">0</span>)</button>
+            <button class="chip-filter" data-filter="grammar">Grammar (<span id="filter-gram-count">0</span>)</button>
+          </div>
         </div>
 
-        <div class="cards-container" id="cards-container">
-          <!-- Suggestion Cards injected here -->
+        <div class="cards-scroll-list" id="suggestions-list">
+          <!-- Suggestion cards dynamically injected here -->
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ✨ AI Styles & Rewrite View (Phi-3-Mini) -->
-  <div id="view-rewrite" class="view-panel" style="display: none;">
+  <!-- TAB 2: ✨ TONE & REWRITE VIEW -->
+  <div class="view-panel" id="view-rewrite">
     <div class="rewrite-workspace">
-      <!-- Left: Rewrite Input Editor -->
-      <div class="editor-section">
+      <!-- Left: Active Document Editor (Bidirectionally synced) -->
+      <div class="rewrite-input-col">
         <div class="editor-toolbar">
-          <div class="editor-tools">
-            <button class="tool-btn" id="btn-rewrite-paste">📋 Paste</button>
-            <button class="tool-btn" id="btn-rewrite-copy">📑 Copy</button>
-            <button class="tool-btn" id="btn-rewrite-clear">🗑️ Clear</button>
+          <div class="tool-group">
+            <button class="btn-tool" id="btn-rw-paste">📋 Paste</button>
+            <button class="btn-tool" id="btn-rw-copy">📑 Copy</button>
+            <button class="btn-tool" id="btn-rw-clear">🗑️ Clear</button>
           </div>
-
-          <div class="style-quick-chips">
-            <button class="style-quick-chip" data-style="formal">👔 Formal</button>
-            <button class="style-quick-chip" data-style="casual">💬 Casual</button>
-            <button class="style-quick-chip" data-style="concise">✂️ Concise</button>
-            <button class="style-quick-chip" data-style="confident">🦁 Confident</button>
-            <button class="style-quick-chip" data-style="academic">🎓 Academic</button>
-            <button class="btn-ai-generate" id="btn-generate-all-styles">
-              <span>✨ Generate All</span>
-            </button>
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-dim);">
+            Active Document
           </div>
         </div>
 
-        <div class="editor-container">
-          <textarea id="rewrite-input" placeholder="Type or paste any text here to propose rewrites in different styles (Formal, Casual, Concise, Confident)..." spellcheck="false">Hi, how ry you ? i want to ask if we can meet tomorrow to discuss the new project ideas.</textarea>
+        <div class="editor-canvas-wrap">
+          <textarea class="writing-textarea" id="rewrite-editor" placeholder="Write or paste your text here to transform it into various professional tones..." spellcheck="false"></textarea>
         </div>
 
-        <div class="editor-footer">
-          <div style="display: flex; gap: 16px;">
-            <span id="stat-rewrite-words">0 words</span>
-            <span id="stat-rewrite-chars">0 characters</span>
+        <div class="editor-statusbar">
+          <div class="doc-metrics">
+            <span id="stat-rw-words">0 words</span>
+            <span>•</span>
+            <span id="stat-rw-chars">0 chars</span>
           </div>
-          <div class="score-badge" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;">
-            <span>AI Model:</span>
-            <span id="rewrite-model-label">Phi-3-Mini (Apple Metal)</span>
+          <div style="color: #c084fc; font-weight: 600;">
+            ⚡ Qwen 2.5 Offline Engine
           </div>
         </div>
       </div>
 
-      <!-- Right: AI Style Proposals Sidebar -->
-      <div class="rewrite-sidebar">
-        <div class="rewrite-header">
-          <div class="assistant-title" id="rewrite-sidebar-title">✨ Tone Proposals</div>
-          <span id="rewrite-status-pill" class="nav-ai-pill">Offline SLM</span>
+      <!-- Right: Tone Proposals Column -->
+      <div class="rewrite-proposals-col">
+        <div class="proposals-header">
+          <div class="tone-selector-strip">
+            <button class="btn-tone-chip" data-tone="formal">👔 Formal</button>
+            <button class="btn-tone-chip" data-tone="casual">💬 Casual</button>
+            <button class="btn-tone-chip" data-tone="concise">✂️ Concise</button>
+            <button class="btn-tone-chip" data-tone="confident">🦁 Confident</button>
+            <button class="btn-tone-chip" data-tone="academic">🎓 Academic</button>
+          </div>
+
+          <button class="btn-generate-all" id="btn-generate-all-tones">
+            <span>✨ Generate All</span>
+          </button>
         </div>
 
-        <div class="rewrite-cards-container" id="rewrite-cards-container">
-          <div class="style-card" id="card-formal">
-            <div class="style-card-header">
-              <span class="style-badge">👔 Formal</span>
-              <span class="style-card-desc">Executive & business</span>
+        <div class="proposals-card-list" id="proposals-list">
+          <!-- 👔 Formal Card -->
+          <div class="tone-card" id="card-tone-formal">
+            <div class="tone-card-top">
+              <span class="tone-pill-badge formal">👔 Formal</span>
+              <span class="tone-persona-desc">Executive & business communication</span>
             </div>
-            <div class="style-card-text" id="text-formal">Click "Generate All" or "👔 Formal" to rewrite...</div>
-            <div class="style-card-actions">
-              <button class="style-btn-action" data-action="copy" data-target="text-formal">📋 Copy</button>
-              <button class="style-btn-action primary" data-action="paste-active" data-target="text-formal">🎯 Paste to App</button>
-              <button class="style-btn-action" data-action="use-in-editor" data-target="text-formal">✍️ Editor</button>
-            </div>
-          </div>
-
-          <div class="style-card" id="card-casual">
-            <div class="style-card-header">
-              <span class="style-badge" style="color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3);">💬 Casual</span>
-              <span class="style-card-desc">Friendly & natural</span>
-            </div>
-            <div class="style-card-text" id="text-casual">Click "Generate All" or "💬 Casual" to rewrite...</div>
-            <div class="style-card-actions">
-              <button class="style-btn-action" data-action="copy" data-target="text-casual">📋 Copy</button>
-              <button class="style-btn-action primary" data-action="paste-active" data-target="text-casual">🎯 Paste to App</button>
-              <button class="style-btn-action" data-action="use-in-editor" data-target="text-casual">✍️ Editor</button>
+            <div class="tone-body-text" id="text-tone-formal">Click "Generate All" or "👔 Formal" to craft a polished rewrite...</div>
+            <div class="tone-footer-actions">
+              <span class="word-delta-chip" id="delta-formal">--</span>
+              <div class="tone-btn-group">
+                <button class="btn-action-ghost" data-action="copy" data-target="text-tone-formal">📋 Copy</button>
+                <button class="btn-action-ghost" data-action="paste-app" data-target="text-tone-formal">🎯 Send to App</button>
+                <button class="btn-apply-doc" data-action="apply-doc" data-target="text-tone-formal">✍️ Apply to Document</button>
+              </div>
             </div>
           </div>
 
-          <div class="style-card" id="card-concise">
-            <div class="style-card-header">
-              <span class="style-badge" style="color: #34d399; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">✂️ Concise</span>
-              <span class="style-card-desc">Direct & no filler</span>
+          <!-- 💬 Casual Card -->
+          <div class="tone-card" id="card-tone-casual">
+            <div class="tone-card-top">
+              <span class="tone-pill-badge casual">💬 Casual</span>
+              <span class="tone-persona-desc">Friendly, warm & natural conversational</span>
             </div>
-            <div class="style-card-text" id="text-concise">Click "Generate All" or "✂️ Concise" to rewrite...</div>
-            <div class="style-card-actions">
-              <button class="style-btn-action" data-action="copy" data-target="text-concise">📋 Copy</button>
-              <button class="style-btn-action primary" data-action="paste-active" data-target="text-concise">🎯 Paste to App</button>
-              <button class="style-btn-action" data-action="use-in-editor" data-target="text-concise">✍️ Editor</button>
-            </div>
-          </div>
-
-          <div class="style-card" id="card-confident">
-            <div class="style-card-header">
-              <span class="style-badge" style="color: #fbbf24; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3);">🦁 Confident</span>
-              <span class="style-card-desc">Decisive & assertive</span>
-            </div>
-            <div class="style-card-text" id="text-confident">Click "Generate All" or "🦁 Confident" to rewrite...</div>
-            <div class="style-card-actions">
-              <button class="style-btn-action" data-action="copy" data-target="text-confident">📋 Copy</button>
-              <button class="style-btn-action primary" data-action="paste-active" data-target="text-confident">🎯 Paste to App</button>
-              <button class="style-btn-action" data-action="use-in-editor" data-target="text-confident">✍️ Editor</button>
+            <div class="tone-body-text" id="text-tone-casual">Click "Generate All" or "💬 Casual" to rewrite...</div>
+            <div class="tone-footer-actions">
+              <span class="word-delta-chip" id="delta-casual">--</span>
+              <div class="tone-btn-group">
+                <button class="btn-action-ghost" data-action="copy" data-target="text-tone-casual">📋 Copy</button>
+                <button class="btn-action-ghost" data-action="paste-app" data-target="text-tone-casual">🎯 Send to App</button>
+                <button class="btn-apply-doc" data-action="apply-doc" data-target="text-tone-casual">✍️ Apply to Document</button>
+              </div>
             </div>
           </div>
 
-          <div class="style-card" id="card-academic">
-            <div class="style-card-header">
-              <span class="style-badge" style="color: #f472b6; background: rgba(244, 114, 182, 0.12); border-color: rgba(244, 114, 182, 0.3);">🎓 Academic</span>
-              <span class="style-card-desc">Articulate & scholarly</span>
+          <!-- ✂️ Concise Card -->
+          <div class="tone-card" id="card-tone-concise">
+            <div class="tone-card-top">
+              <span class="tone-pill-badge concise">✂️ Concise</span>
+              <span class="tone-persona-desc">Direct, short, no filler words</span>
             </div>
-            <div class="style-card-text" id="text-academic">Click "Generate All" or "🎓 Academic" to rewrite...</div>
-            <div class="style-card-actions">
-              <button class="style-btn-action" data-action="copy" data-target="text-academic">📋 Copy</button>
-              <button class="style-btn-action primary" data-action="paste-active" data-target="text-academic">🎯 Paste to App</button>
-              <button class="style-btn-action" data-action="use-in-editor" data-target="text-academic">✍️ Editor</button>
+            <div class="tone-body-text" id="text-tone-concise">Click "Generate All" or "✂️ Concise" to rewrite...</div>
+            <div class="tone-footer-actions">
+              <span class="word-delta-chip" id="delta-concise">--</span>
+              <div class="tone-btn-group">
+                <button class="btn-action-ghost" data-action="copy" data-target="text-tone-concise">📋 Copy</button>
+                <button class="btn-action-ghost" data-action="paste-app" data-target="text-tone-concise">🎯 Send to App</button>
+                <button class="btn-apply-doc" data-action="apply-doc" data-target="text-tone-concise">✍️ Apply to Document</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🦁 Confident Card -->
+          <div class="tone-card" id="card-tone-confident">
+            <div class="tone-card-top">
+              <span class="tone-pill-badge confident">🦁 Confident</span>
+              <span class="tone-persona-desc">Decisive, assertive, no hesitation</span>
+            </div>
+            <div class="tone-body-text" id="text-tone-confident">Click "Generate All" or "🦁 Confident" to rewrite...</div>
+            <div class="tone-footer-actions">
+              <span class="word-delta-chip" id="delta-confident">--</span>
+              <div class="tone-btn-group">
+                <button class="btn-action-ghost" data-action="copy" data-target="text-tone-confident">📋 Copy</button>
+                <button class="btn-action-ghost" data-action="paste-app" data-target="text-tone-confident">🎯 Send to App</button>
+                <button class="btn-apply-doc" data-action="apply-doc" data-target="text-tone-confident">✍️ Apply to Document</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🎓 Academic Card -->
+          <div class="tone-card" id="card-tone-academic">
+            <div class="tone-card-top">
+              <span class="tone-pill-badge academic">🎓 Academic</span>
+              <span class="tone-persona-desc">Scholarly, articulate & rigorous</span>
+            </div>
+            <div class="tone-body-text" id="text-tone-academic">Click "Generate All" or "🎓 Academic" to rewrite...</div>
+            <div class="tone-footer-actions">
+              <span class="word-delta-chip" id="delta-academic">--</span>
+              <div class="tone-btn-group">
+                <button class="btn-action-ghost" data-action="copy" data-target="text-tone-academic">📋 Copy</button>
+                <button class="btn-action-ghost" data-action="paste-app" data-target="text-tone-academic">🎯 Send to App</button>
+                <button class="btn-apply-doc" data-action="apply-doc" data-target="text-tone-academic">✍️ Apply to Document</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1211,227 +1437,226 @@ Their is no doubt that this tool is very helpfull.</textarea>
     </div>
   </div>
 
-  <!-- DeepL Translator View -->
-  <div id="view-translate" class="view-panel" style="display: none;">
+  <!-- TAB 3: 🌐 NEURAL TRANSLATE VIEW -->
+  <div class="view-panel" id="view-translate">
     <div class="translate-workspace">
-      <!-- Left: Source Box -->
-      <div class="translate-box source-box">
-        <div class="translate-box-header">
-          <div class="lang-selector-group">
-            <select id="source-lang-select" class="lang-select-deepl">
-              <option value="auto">Detect Language</option>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
-              <option value="ar">Arabic</option>
-            </select>
-            <span id="detected-lang-pill" class="detected-pill" style="display: none;">Detected: English</span>
-          </div>
-          <div class="translate-box-tools">
-            <button class="tool-btn" id="btn-trans-paste" title="Paste clipboard text">📋 Paste</button>
-            <button class="tool-btn" id="btn-trans-clear" title="Clear text">🗑️ Clear</button>
+      <!-- Source Pane -->
+      <div class="trans-pane">
+        <div class="trans-pane-header">
+          <select class="trans-select" id="trans-source-lang">
+            <option value="auto">Detect Language</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="it">Italian</option>
+            <option value="pt">Portuguese</option>
+            <option value="ar">Arabic (العربية)</option>
+            <option value="ru">Russian</option>
+            <option value="zh">Chinese</option>
+            <option value="ja">Japanese</option>
+          </select>
+
+          <div class="tool-group">
+            <button class="btn-tool" id="btn-trans-paste">📋 Paste</button>
+            <button class="btn-tool" id="btn-trans-clear">🗑️ Clear</button>
           </div>
         </div>
 
-        <div class="translate-textarea-wrapper">
-          <textarea id="translate-source" placeholder="Type or paste any text to translate 100% offline..." spellcheck="false">Hello! Welcome to OpenGrammarly offline translator. Everything is processed 100% privately on your Mac.</textarea>
-        </div>
+        <textarea class="trans-textarea" id="trans-source-text" placeholder="Type or paste text to translate privately offline..." spellcheck="false"></textarea>
 
-        <div class="translate-box-footer">
-          <span id="source-char-count">0 characters</span>
-          <span class="engine-badge" id="source-engine-badge">⚡ Argos Neural + Phi-3 AI</span>
+        <div class="trans-pane-footer">
+          <span id="trans-source-chars">0 characters</span>
+          <span id="trans-detected-label" style="display: none; color: #60a5fa; font-weight: 600;">Detected: English</span>
         </div>
       </div>
 
-      <!-- Center: Swap Languages -->
-      <div class="translate-divider">
-        <button class="btn-swap-langs" id="btn-swap-langs" title="Swap languages">⇄</button>
+      <!-- Center Swap Divider -->
+      <div class="trans-divider-col">
+        <button class="btn-swap-pill" id="btn-swap-trans" title="Swap languages">⇄</button>
       </div>
 
-      <!-- Right: Target Box -->
-      <div class="translate-box target-box">
-        <div class="translate-box-header">
-          <div class="lang-selector-group">
-            <select id="target-lang-select" class="lang-select-deepl">
-              <option value="es">Spanish</option>
-              <option value="en">English</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
-              <option value="ar">Arabic</option>
-            </select>
-            <label class="ai-toggle-label" title="Use ultra-fast local neural AI for fluent, native translation">
-              <input type="checkbox" id="check-use-ai-trans" checked>
-              <span>✨ Neural AI (Fast)</span>
-            </label>
-          </div>
-          <div class="translate-box-tools">
-            <button class="tool-btn" id="btn-trans-copy" title="Copy translated text">📑 Copy</button>
-            <button class="btn-fix-active" id="btn-trans-send-active" title="Paste translation directly into WhatsApp, Slack, Notes, etc.">
-              <span>🎯 Paste to Active App</span>
-            </button>
+      <!-- Target Pane -->
+      <div class="trans-pane">
+        <div class="trans-pane-header">
+          <select class="trans-select" id="trans-target-lang">
+            <option value="es">Spanish (Español)</option>
+            <option value="fr">French (Français)</option>
+            <option value="de">German (Deutsch)</option>
+            <option value="ar">Arabic (العربية)</option>
+            <option value="it">Italian (Italiano)</option>
+            <option value="pt">Portuguese (Português)</option>
+            <option value="en">English</option>
+            <option value="ru">Russian</option>
+            <option value="zh">Chinese</option>
+            <option value="ja">Japanese</option>
+          </select>
+
+          <div class="tool-group">
+            <button class="btn-tool" id="btn-trans-copy">📋 Copy</button>
+            <button class="btn-tool" id="btn-trans-paste-app">🎯 Send to App</button>
           </div>
         </div>
 
-        <div class="translate-textarea-wrapper">
-          <textarea id="translate-target" placeholder="Translation will appear here instantly..." readonly></textarea>
-          <div id="translate-loading" class="translate-spinner" style="display: none;">
-            <div class="spinner-dot"></div>
-            <span>Translating offline...</span>
-          </div>
-        </div>
+        <textarea class="trans-textarea" id="trans-target-text" placeholder="Translation appears here instantly..." readonly spellcheck="false"></textarea>
 
-        <div class="translate-box-footer">
-          <span id="target-char-count">0 characters</span>
-          <div class="translation-meta" id="translation-meta">
-            <span class="status-indicator-dot"></span>
-            <span id="translation-speed-label">Ready</span>
-          </div>
+        <div class="trans-pane-footer">
+          <span id="trans-target-chars">0 characters</span>
+          <span id="trans-speed-badge" style="color: #34d399; font-weight: 600;">⚡ Ready</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Onboarding Permissions Modal -->
-  <div class="modal-overlay" id="permissions-modal">
-    <div class="modal-card">
+  <!-- Chrome Extension Setup Modal -->
+  <div class="modal-overlay" id="ext-modal">
+    <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">⚙️ 1-Click Setup: Enable Accessibility</div>
-      </div>
-      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-        To allow OpenGrammarly to automatically detect text and auto-replace mistakes across <strong>Chrome, Safari, Slack, Notes, and Word</strong>, macOS requires one-time permission.
-      </p>
-
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>Open Accessibility Settings</h4>
-          <p>Click below to reveal macOS System Settings directly.</p>
+        <div class="modal-title">
+          <span>🧩 Connect Chrome / Edge Extension</span>
         </div>
+        <button class="btn-close-modal" id="btn-close-ext">&times;</button>
       </div>
 
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>Turn On OpenGrammarly</h4>
-          <p>Toggle the switch next to <strong>OpenGrammarly</strong> (or Terminal/Python) to ON.</p>
-        </div>
-      </div>
-
-      <button class="btn-modal-primary" id="btn-request-perms">⚙️ Open System Settings Now</button>
-      <button class="tool-btn" id="btn-dismiss-perms" style="margin-top: -6px;">Continue with App Only</button>
-    </div>
-  </div>
-
-  <!-- Browser Extension Modal -->
-  <div class="modal-overlay" id="extension-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">🧩 Browser Extension Setup</div>
-        <button class="modal-close" id="btn-close-ext-modal">✕</button>
-      </div>
-      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
-        Add the native floating Grammarly bubble to <strong>Google Chrome, Brave, or Edge</strong> to get live wavy underlines across all websites (Gmail, Google Docs, Twitter, Notion).
-      </p>
-
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
+      <div class="modal-step-row">
+        <div class="step-badge">1</div>
+        <div class="step-text">
           <h4>Open Extensions Page</h4>
-          <p>Open <code>chrome://extensions</code> in your browser and turn on <strong>Developer mode</strong> (top-right corner).</p>
+          <p>In Chrome, Brave, or Edge, visit <code>chrome://extensions</code> in your address bar.</p>
         </div>
       </div>
 
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
+      <div class="modal-step-row">
+        <div class="step-badge">2</div>
+        <div class="step-text">
+          <h4>Enable Developer Mode</h4>
+          <p>Toggle the <strong>Developer mode</strong> switch in the top-right corner of the extensions page.</p>
+        </div>
+      </div>
+
+      <div class="modal-step-row">
+        <div class="step-badge">3</div>
+        <div class="step-text">
           <h4>Click "Load unpacked"</h4>
-          <p>In the file picker, click <strong>Downloads</strong> on the left and select: <code>OpenGrammarly-Extension</code></p>
+          <p>Select the <strong>OpenGrammarly-Extension</strong> folder inside your Downloads folder.</p>
         </div>
       </div>
 
-      <button class="btn-modal-primary" id="btn-reveal-extension">📂 Open "OpenGrammarly-Extension" in Downloads</button>
+      <button class="btn-modal-cta" id="btn-reveal-ext-folder">
+        <span>📂 Reveal Extension Folder in Finder</span>
+      </button>
     </div>
+  </div>
+
+  <!-- Toast Notification Pill -->
+  <div class="toast-pill" id="global-toast">
+    <span id="toast-icon">✓</span>
+    <span id="toast-message">Action completed</span>
   </div>
 
   <script>
-    const editor = document.getElementById('editor');
-    const cardsContainer = document.getElementById('cards-container');
-    const assistantCount = document.getElementById('assistant-count');
-    const langSelect = document.getElementById('lang-select');
-    const statWords = document.getElementById('stat-words');
-    const statChars = document.getElementById('stat-chars');
-    const scoreVal = document.getElementById('score-val');
+    // ============================================================
+    // CENTRAL DOCUMENT STATE MANAGER
+    // ============================================================
+    const docState = {
+      text: "This are an example sentence with a grammatical mistake.\nLanguageTool can easily finds errors in spelling, grammer, and punctuation.\nTheir is no doubt that this tool is very helpfull.",
+      
+      setText(newText, source = 'editor') {
+        this.text = newText;
+        if (source !== 'editor' && mainEditor) mainEditor.value = newText;
+        if (source !== 'rewrite' && rewriteEditor) rewriteEditor.value = newText;
+        updateMetrics();
+        if (source === 'rewrite' || source === 'external' || source === 'tone-applied') {
+          triggerGrammarCheck();
+        }
+      }
+    };
 
-    const permsModal = document.getElementById('permissions-modal');
-    const extModal = document.getElementById('extension-modal');
+    // DOM Elements
+    const mainEditor = document.getElementById('main-editor');
+    const rewriteEditor = document.getElementById('rewrite-editor');
+    const langSelect = document.getElementById('lang-select');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const autofixCountBadge = document.getElementById('autofix-count-badge');
+    const scoreValLabel = document.getElementById('score-val-label');
+    const scoreRingIndicator = document.getElementById('score-ring-indicator');
+    
+    const statWordCount = document.getElementById('stat-word-count');
+    const statCharCount = document.getElementById('stat-char-count');
+    const statReadTime = document.getElementById('stat-read-time');
+    
+    const statRwWords = document.getElementById('stat-rw-words');
+    const statRwChars = document.getElementById('stat-rw-chars');
+
+    const filterAllCount = document.getElementById('filter-all-count');
+    const filterSpellCount = document.getElementById('filter-spell-count');
+    const filterGramCount = document.getElementById('filter-gram-count');
 
     let currentMatches = [];
-    let checkTimeout = null;
+    let currentFilter = 'all';
+    let checkDebounceTimer = null;
 
-    // Check system permissions and auto-dismiss modal when granted
-    async function checkPermissionsStatus() {
-      try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        if (!data.accessibility_trusted) {
-          // Show onboarding modal if not granted
-          if (!sessionStorage.getItem('perms_dismissed')) {
-            permsModal.style.display = 'flex';
-          }
-        } else {
-          permsModal.style.display = 'none';
-        }
-      } catch (e) {}
+    // Toast helper
+    function showToast(msg, icon = "✓") {
+      const toast = document.getElementById('global-toast');
+      const toastMsg = document.getElementById('toast-message');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+      toastMsg.innerText = msg;
+      toastIcon.innerText = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
-    document.getElementById('btn-request-perms').addEventListener('click', async () => {
-      await fetch('/api/permissions/request', { method: 'POST' });
-    });
-
-    document.getElementById('btn-dismiss-perms').addEventListener('click', () => {
-      permsModal.style.display = 'none';
-      sessionStorage.setItem('perms_dismissed', '1');
-    });
-
-    // Extension modal
-    document.getElementById('btn-show-extension').addEventListener('click', () => {
-      extModal.style.display = 'flex';
-    });
-    document.getElementById('btn-close-ext-modal').addEventListener('click', () => {
-      extModal.style.display = 'none';
-    });
-    document.getElementById('btn-reveal-extension').addEventListener('click', async () => {
-      await fetch('/api/open_extension_folder', { method: 'POST' });
-    });
-
-    // Debounced text check on EVERY input
-    editor.addEventListener('input', () => {
-      updateStats();
-      clearTimeout(checkTimeout);
-      checkTimeout = setTimeout(() => runGrammarCheck(), 250);
-    });
-
-    langSelect.addEventListener('change', () => {
-      runGrammarCheck();
-    });
-
-    function updateStats() {
-      const text = editor.value || "";
+    // ============================================================
+    // METRICS & SCORE CALCULATION
+    // ============================================================
+    function updateMetrics() {
+      const text = docState.text || "";
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      statWords.innerText = `${words} words`;
-      statChars.innerText = `${text.length} characters`;
+      const chars = text.length;
+      const readSeconds = Math.max(1, Math.round((words / 200) * 60));
+
+      if (statWordCount) statWordCount.innerText = `${words} words`;
+      if (statCharCount) statCharCount.innerText = `${chars} chars`;
+      if (statReadTime) statReadTime.innerText = words > 0 ? `~${readSeconds}s read` : `~0s read`;
+
+      if (statRwWords) statRwWords.innerText = `${words} words`;
+      if (statRwChars) statRwChars.innerText = `${chars} chars`;
     }
 
-    async function runGrammarCheck() {
-      const text = editor.value || "";
+    function updateScoreRing(matchesCount) {
+      const deductions = Math.min(matchesCount * 8, 80);
+      const score = Math.max(20, 100 - deductions);
+      if (scoreValLabel) scoreValLabel.innerText = score;
+
+      // Ring stroke animation (circumference is ~100 for r=15.9155)
+      const circumference = 100;
+      const offset = circumference - (circumference * score) / 100;
+      if (scoreRingIndicator) {
+        scoreRingIndicator.style.strokeDashoffset = offset;
+        if (score >= 90) {
+          scoreRingIndicator.style.stroke = "var(--emerald)";
+          if (scoreValLabel) scoreValLabel.style.color = "var(--emerald)";
+        } else if (score >= 70) {
+          scoreRingIndicator.style.stroke = "var(--amber)";
+          if (scoreValLabel) scoreValLabel.style.color = "var(--amber)";
+        } else {
+          scoreRingIndicator.style.stroke = "var(--rose)";
+          if (scoreValLabel) scoreValLabel.style.color = "var(--rose)";
+        }
+      }
+    }
+
+    // ============================================================
+    // GRAMMAR & SPELL CHECK ENGINE
+    // ============================================================
+    async function triggerGrammarCheck() {
+      const text = docState.text || "";
       if (!text.trim()) {
+        currentMatches = [];
         renderCards([]);
-        scoreVal.innerText = "100/100";
+        updateScoreRing(0);
         return;
       }
 
@@ -1445,85 +1670,115 @@ Their is no doubt that this tool is very helpfull.</textarea>
         const data = await res.json();
         currentMatches = data.matches || [];
         renderCards(currentMatches);
-
-        const deductions = Math.min(currentMatches.length * 8, 75);
-        scoreVal.innerText = `${100 - deductions}/100`;
+        updateScoreRing(currentMatches.length);
       } catch (err) {
-        console.error("Grammar check failed:", err);
+        console.error("Grammar check error:", err);
       }
     }
 
     function renderCards(matches) {
-      cardsContainer.innerHTML = "";
-      assistantCount.innerText = `Suggestions (${matches.length})`;
+      if (!suggestionsList) return;
+      suggestionsList.innerHTML = "";
 
-      if (matches.length === 0) {
-        cardsContainer.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">🎉</div>
-            <div class="empty-title">All clear!</div>
-            <div class="empty-desc">No spelling or grammatical mistakes detected in your text.</div>
+      const spellMatches = matches.filter(m => m.rule && (m.rule.issueType === 'misspelling' || (m.rule.id && m.rule.id.includes('TYPO'))));
+      const gramMatches = matches.filter(m => !spellMatches.includes(m));
+
+      if (filterAllCount) filterAllCount.innerText = matches.length;
+      if (filterSpellCount) filterSpellCount.innerText = spellMatches.length;
+      if (filterGramCount) filterGramCount.innerText = gramMatches.length;
+      if (autofixCountBadge) autofixCountBadge.innerText = matches.length;
+
+      let displayMatches = matches;
+      if (currentFilter === 'spelling') displayMatches = spellMatches;
+      if (currentFilter === 'grammar') displayMatches = gramMatches;
+
+      if (displayMatches.length === 0) {
+        suggestionsList.innerHTML = `
+          <div class="empty-suggestions-view">
+            <div class="empty-art-icon">🎉</div>
+            <div class="empty-headline">All Clear!</div>
+            <div class="empty-desc">Your document is clean and error-free. No spelling or grammatical mistakes detected.</div>
           </div>
         `;
         return;
       }
 
-      const text = editor.value || "";
+      const text = docState.text || "";
 
-      matches.forEach((m) => {
+      displayMatches.forEach((m, idx) => {
         const offset = m.offset;
         const len = m.length;
         const errWord = text.substring(offset, offset + len);
         const bestFix = (m.replacements && m.replacements[0]) ? m.replacements[0].value : "";
-        const issueType = m.rule && m.rule.issueType === "misspelling" ? "Spelling" : "Grammar";
-        const catClass = issueType === "Spelling" ? "cat-spelling" : "cat-grammar";
+        const isSpell = m.rule && (m.rule.issueType === 'misspelling' || (m.rule.id && m.rule.id.includes('TYPO')));
+        const catName = isSpell ? 'Spelling' : 'Grammar';
+        const catClass = isSpell ? 'spelling' : 'grammar';
 
-        const card = document.createElement("div");
-        card.className = "card";
+        const card = document.createElement('div');
+        card.className = 'suggestion-card';
         card.innerHTML = `
-          <div class="card-top">
-            <span class="category-chip ${catClass}">${issueType}</span>
-            <span style="font-size: 11px; color: var(--text-muted);">${m.rule.id}</span>
+          <div class="card-meta-row">
+            <span class="issue-badge ${catClass}">${catName}</span>
+            <span class="rule-tag">${m.rule ? m.rule.id : ''}</span>
           </div>
 
-          <div class="error-preview">
-            <span class="error-word">"${errWord}"</span>
-            <span class="arrow">→</span>
-            <span class="fix-word">${bestFix || "Remove"}</span>
+          <div class="diff-preview-box">
+            <span class="diff-err">${errWord || 'mistake'}</span>
+            <span class="diff-arrow">→</span>
+            <span class="diff-fix">${bestFix || 'Remove'}</span>
           </div>
 
-          <div class="card-message">${m.message}</div>
+          <div class="card-message-text">${m.message}</div>
 
-          <div class="card-actions">
-            ${bestFix ? `<button class="btn-apply-fix" onclick="applySingleFix(${offset}, ${len}, '${bestFix.replace(/'/g, "\\'")}')">Fix with "${bestFix}"</button>` : ''}
-            <button class="btn-dismiss" onclick="dismissCard(this)">Dismiss</button>
+          <div class="card-cta-row">
+            ${bestFix ? `<button class="btn-apply-suggestion" onclick="applySingleCorrection(${offset}, ${len}, '${bestFix.replace(/'/g, "\\'")}')">⚡ Fix with "${bestFix}"</button>` : '<span></span>'}
+            <button class="btn-dismiss-card" onclick="dismissSuggestionCard(this)">Dismiss</button>
           </div>
         `;
-        cardsContainer.appendChild(card);
+        suggestionsList.appendChild(card);
       });
     }
 
-    window.applySingleFix = function(offset, length, replacement) {
-      const text = editor.value || "";
-      const newText = text.substring(0, offset) + replacement + text.substring(offset + length);
-      editor.value = newText;
-      updateStats();
-      runGrammarCheck();
+    // Apply single correction
+    window.applySingleCorrection = function(offset, length, replacement) {
+      const text = docState.text || "";
+      const updated = text.substring(0, offset) + replacement + text.substring(offset + length);
+      docState.setText(updated, 'external');
+      showToast(`Corrected with "${replacement}"`);
     };
 
-    window.dismissCard = function(btn) {
-      const card = btn.closest('.card');
-      if (card) card.remove();
-      const remaining = cardsContainer.querySelectorAll('.card').length;
-      assistantCount.innerText = `Suggestions (${remaining})`;
+    // Dismiss suggestion card
+    window.dismissSuggestionCard = function(btn) {
+      const card = btn.closest('.suggestion-card');
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-6px)';
+        setTimeout(() => {
+          card.remove();
+          const remaining = suggestionsList.querySelectorAll('.suggestion-card').length;
+          if (remaining === 0) {
+            renderCards([]);
+          }
+        }, 150);
+      }
     };
 
-    // Auto-fix All button (combines LanguageTool rules + AI smart fix if needed)
-    document.getElementById('btn-autofix').addEventListener('click', async () => {
-      let text = editor.value || "";
+    // Filter chips
+    document.querySelectorAll('.chip-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.chip-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        renderCards(currentMatches);
+      });
+    });
+
+    // Auto-fix all button
+    document.getElementById('btn-ed-autofix').addEventListener('click', async () => {
+      const text = docState.text || "";
       if (!text.trim()) return;
-      const autofixBtn = document.getElementById('btn-autofix');
-      autofixBtn.style.opacity = '0.7';
+      const btn = document.getElementById('btn-ed-autofix');
+      btn.disabled = true;
       try {
         const res = await fetch('/api/autofix', {
           method: 'POST',
@@ -1535,220 +1790,117 @@ Their is no doubt that this tool is very helpfull.</textarea>
           })
         });
         const data = await res.json();
-        if (data.fixed) {
-          editor.value = data.fixed;
-          updateStats();
-          runGrammarCheck();
-        }
-      } catch (e) {
-        console.error("Auto-fix failed:", e);
-      } finally {
-        autofixBtn.style.opacity = '1';
-      }
-    });
-
-    // Dedicated AI Polish button
-    const aiMagicBtn = document.getElementById('btn-ai-magic-fix');
-    if (aiMagicBtn) {
-      aiMagicBtn.addEventListener('click', async () => {
-        let text = editor.value || "";
-        if (!text.trim()) return;
-        const origContent = aiMagicBtn.innerHTML;
-        aiMagicBtn.innerHTML = '<span>✨ Polishing...</span>';
-        aiMagicBtn.disabled = true;
-        try {
-          const res = await fetch('/api/ai/fix', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text })
-          });
-          const data = await res.json();
-          if (data.fixed) {
-            editor.value = data.fixed;
-            updateStats();
-            runGrammarCheck();
-          }
-        } catch (e) {
-          console.error("AI polish failed:", e);
-        } finally {
-          aiMagicBtn.innerHTML = origContent;
-          aiMagicBtn.disabled = false;
-        }
-      });
-    }
-
-    // Fix Active App button
-    document.getElementById('btn-fix-active').addEventListener('click', async () => {
-      await fetch('/api/fix_active_app', { method: 'POST' });
-    });
-
-    // Toolbar buttons
-    document.getElementById('btn-copy').addEventListener('click', () => {
-      navigator.clipboard.writeText(editor.value);
-    });
-
-    document.getElementById('btn-paste').addEventListener('click', async () => {
-      try {
-        const clip = await navigator.clipboard.readText();
-        if (clip) {
-          editor.value = clip;
-          updateStats();
-          runGrammarCheck();
-        }
-      } catch (e) {
-        editor.focus();
-      }
-    });
-
-    document.getElementById('btn-clear').addEventListener('click', () => {
-      editor.value = "";
-      updateStats();
-      runGrammarCheck();
-    });
-
-    // ==========================================
-    // 🌐 NAVIGATION & TAB SWITCHING (3 TABS)
-    // ==========================================
-    const tabBtnGrammar = document.getElementById('tab-btn-grammar');
-    const tabBtnRewrite = document.getElementById('tab-btn-rewrite');
-    const tabBtnTranslate = document.getElementById('tab-btn-translate');
-    const viewGrammar = document.getElementById('view-grammar');
-    const viewRewrite = document.getElementById('view-rewrite');
-    const viewTranslate = document.getElementById('view-translate');
-
-    const aiStatusPill = document.getElementById('ai-status-pill');
-    const aiStatusLabel = document.getElementById('ai-status-label');
-
-    function switchTab(activeTab) {
-      tabBtnGrammar.classList.toggle('active', activeTab === 'grammar');
-      tabBtnRewrite.classList.toggle('active', activeTab === 'rewrite');
-      tabBtnTranslate.classList.toggle('active', activeTab === 'translate');
-
-      viewGrammar.style.display = activeTab === 'grammar' ? 'flex' : 'none';
-      viewRewrite.style.display = activeTab === 'rewrite' ? 'flex' : 'none';
-      viewTranslate.style.display = activeTab === 'translate' ? 'flex' : 'none';
-
-      langSelect.style.display = activeTab === 'grammar' ? 'block' : 'none';
-
-      if (activeTab === 'grammar') {
-        editor.focus();
-      } else if (activeTab === 'rewrite') {
-        if (editor.value.trim() && !rewriteInput.value.trim()) {
-          rewriteInput.value = editor.value.trim();
-        }
-        updateRewriteCounts();
-        rewriteInput.focus();
-      } else if (activeTab === 'translate') {
-        transSource.focus();
-        runTranslation();
-      }
-    }
-
-    tabBtnGrammar.addEventListener('click', () => switchTab('grammar'));
-    tabBtnRewrite.addEventListener('click', () => switchTab('rewrite'));
-    tabBtnTranslate.addEventListener('click', () => switchTab('translate'));
-
-    // Check Local AI Status
-    async function checkAIStatus() {
-      try {
-        const res = await fetch('/api/ai/status');
-        const data = await res.json();
-        if (data.ollama_running && data.model_installed) {
-          const m = (data.active_model || 'Local AI').toUpperCase();
-          aiStatusLabel.innerText = `✨ ${m} Ready`;
-          aiStatusPill.title = `Active offline model: ${data.active_model}`;
-          aiStatusPill.style.borderColor = "rgba(168, 85, 247, 0.5)";
-          aiStatusPill.style.background = "rgba(168, 85, 247, 0.15)";
-        } else if (data.installing) {
-          aiStatusLabel.innerText = "⏳ Downloading Model...";
-          aiStatusPill.title = "Pulling model in background...";
+        if (data.fixed && data.fixed !== text) {
+          docState.setText(data.fixed, 'external');
+          showToast(`Fixed ${data.count || 1} issues automatically!`);
         } else {
-          aiStatusLabel.innerText = "⚡ Setup Local AI";
-          aiStatusPill.title = "Ollama or model not detected. Click to auto-install.";
+          showToast("No issues to fix!");
         }
-      } catch (e) {}
-    }
+      } catch (e) {
+        console.error("Autofix failed:", e);
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
-    aiStatusPill.addEventListener('click', async () => {
+    // AI Polish button
+    document.getElementById('btn-ed-ai-polish').addEventListener('click', async () => {
+      const text = docState.text || "";
+      if (!text.trim()) return;
+      const btn = document.getElementById('btn-ed-ai-polish');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span>✨ Polishing...</span>';
+      btn.disabled = true;
       try {
-        aiStatusLabel.innerText = "⏳ Checking...";
-        const res = await fetch('/api/ai/setup', { method: 'POST' });
+        const res = await fetch('/api/ai/fix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
         const data = await res.json();
-        if (data.status === 'started') {
-          aiStatusLabel.innerText = "⏳ Starting Download...";
+        if (data.fixed) {
+          docState.setText(data.fixed, 'external');
+          showToast("Document polished with Qwen 2.5 AI!");
         }
-        setTimeout(checkAIStatus, 1500);
       } catch (e) {
-        checkAIStatus();
+        console.error("AI polish failed:", e);
+      } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
       }
     });
 
-    // ==========================================
-    // ✨ AI STYLES & REWRITE INTERFACE LOGIC
-    // ==========================================
-    const rewriteInput = document.getElementById('rewrite-input');
-    const statRewriteWords = document.getElementById('stat-rewrite-words');
-    const statRewriteChars = document.getElementById('stat-rewrite-chars');
-    const btnGenerateAllStyles = document.getElementById('btn-generate-all-styles');
-    const rewriteCardsContainer = document.getElementById('rewrite-cards-container');
+    // Input listener with debounce
+    mainEditor.addEventListener('input', () => {
+      docState.text = mainEditor.value;
+      if (rewriteEditor) rewriteEditor.value = mainEditor.value;
+      updateMetrics();
+      clearTimeout(checkDebounceTimer);
+      checkDebounceTimer = setTimeout(triggerGrammarCheck, 220);
+    });
 
-    function updateRewriteCounts() {
-      const text = rewriteInput.value || "";
-      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      statRewriteWords.innerText = `${words} words`;
-      statRewriteChars.innerText = `${text.length} characters`;
+    rewriteEditor.addEventListener('input', () => {
+      docState.text = rewriteEditor.value;
+      if (mainEditor) mainEditor.value = rewriteEditor.value;
+      updateMetrics();
+      clearTimeout(checkDebounceTimer);
+      checkDebounceTimer = setTimeout(triggerGrammarCheck, 220);
+    });
+
+    langSelect.addEventListener('change', triggerGrammarCheck);
+
+    // ============================================================
+    // NAVIGATION & TAB SWITCHING
+    // ============================================================
+    const tabBtns = document.querySelectorAll('.nav-seg-btn');
+    const viewPanels = {
+      'proofread': document.getElementById('view-proofread'),
+      'rewrite': document.getElementById('view-rewrite'),
+      'translate': document.getElementById('view-translate'),
+    };
+
+    function switchAppTab(tabId) {
+      tabBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tabId));
+      Object.entries(viewPanels).forEach(([id, panel]) => {
+        if (panel) panel.classList.toggle('active', id === tabId);
+      });
+
+      // Synchronize text when switching
+      if (tabId === 'proofread') {
+        mainEditor.value = docState.text;
+        mainEditor.focus();
+        triggerGrammarCheck();
+      } else if (tabId === 'rewrite') {
+        rewriteEditor.value = docState.text;
+        rewriteEditor.focus();
+      } else if (tabId === 'translate') {
+        const transSrc = document.getElementById('trans-source-text');
+        if (transSrc && !transSrc.value.trim()) {
+          transSrc.value = docState.text;
+          runNeuralTranslation();
+        }
+      }
     }
 
-    rewriteInput.addEventListener('input', updateRewriteCounts);
-
-    // Paste text into rewrite input
-    document.getElementById('btn-rewrite-paste').addEventListener('click', async () => {
-      try {
-        const clip = await navigator.clipboard.readText();
-        if (clip) {
-          rewriteInput.value = clip;
-          updateRewriteCounts();
-        }
-      } catch (e) {
-        rewriteInput.focus();
-      }
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchAppTab(btn.getAttribute('data-tab')));
     });
 
-    // Copy rewrite input
-    document.getElementById('btn-rewrite-copy').addEventListener('click', (e) => {
-      if (rewriteInput.value) {
-        navigator.clipboard.writeText(rewriteInput.value);
-        const orig = e.target.innerText;
-        e.target.innerText = "✓ Copied!";
-        setTimeout(() => { e.target.innerText = orig; }, 1500);
-      }
-    });
-
-    // Clear rewrite input
-    document.getElementById('btn-rewrite-clear').addEventListener('click', () => {
-      rewriteInput.value = "";
-      updateRewriteCounts();
-      rewriteInput.focus();
-    });
-
-    // Trigger rewrite for a specific style or all styles
-    async function runStyleRewrite(style = "all") {
-      const text = rewriteInput.value || "";
+    // ============================================================
+    // ✨ TONE & REWRITE ENGINE
+    // ============================================================
+    async function runToneRewrite(style = "all") {
+      const text = docState.text || "";
       if (!text.trim()) return;
 
-      const stylesToUpdate = style === "all" ? ["formal", "casual", "concise", "confident", "academic"] : [style];
-
-      stylesToUpdate.forEach(s => {
-        const el = document.getElementById(`text-${s}`);
-        if (el) {
-          el.innerHTML = '<span style="color: #c084fc; font-style: italic;">✨ Phi-3-Mini is thinking...</span>';
-        }
+      const tones = style === "all" ? ["formal", "casual", "concise", "confident", "academic"] : [style];
+      tones.forEach(t => {
+        const el = document.getElementById(`text-tone-${t}`);
+        if (el) el.innerHTML = '<span style="color: #c084fc; font-style: italic;">✨ Qwen 2.5 is writing...</span>';
       });
 
-      if (btnGenerateAllStyles) {
-        btnGenerateAllStyles.disabled = true;
-        btnGenerateAllStyles.style.opacity = "0.7";
-      }
+      const genAllBtn = document.getElementById('btn-generate-all-tones');
+      if (genAllBtn) genAllBtn.disabled = true;
 
       try {
         const res = await fetch('/api/ai/rewrite', {
@@ -1759,250 +1911,290 @@ Their is no doubt that this tool is very helpfull.</textarea>
         const data = await res.json();
 
         if (style === "all" && data.styles) {
-          for (const [s, val] of Object.entries(data.styles)) {
-            const el = document.getElementById(`text-${s}`);
-            if (el) el.innerText = val || "(No proposal generated)";
+          for (const [t, content] of Object.entries(data.styles)) {
+            const el = document.getElementById(`text-tone-${t}`);
+            const deltaEl = document.getElementById(`delta-${t}`);
+            if (el) el.innerText = content || "(No rewrite generated)";
+            if (deltaEl && content) {
+              const origWords = text.trim().split(/\s+/).length;
+              const newWords = content.trim().split(/\s+/).length;
+              const diff = newWords - origWords;
+              deltaEl.innerText = diff === 0 ? "Same length" : (diff > 0 ? `+${diff} words` : `${diff} words`);
+            }
           }
+          showToast("Generated 5 tones with Qwen 2.5!");
         } else if (data.rewritten) {
-          const el = document.getElementById(`text-${style}`);
+          const el = document.getElementById(`text-tone-${style}`);
+          const deltaEl = document.getElementById(`delta-${style}`);
           if (el) el.innerText = data.rewritten;
+          if (deltaEl) {
+            const origWords = text.trim().split(/\s+/).length;
+            const newWords = data.rewritten.trim().split(/\s+/).length;
+            const diff = newWords - origWords;
+            deltaEl.innerText = diff === 0 ? "Same length" : (diff > 0 ? `+${diff} words` : `${diff} words`);
+          }
+          showToast(`Rewritten in ${style} tone!`);
         }
       } catch (err) {
-        console.error("Rewrite error:", err);
-        stylesToUpdate.forEach(s => {
-          const el = document.getElementById(`text-${s}`);
-          if (el) el.innerText = "Error generating rewrite with Phi-3-Mini.";
-        });
+        console.error("Tone rewrite error:", err);
       } finally {
-        if (btnGenerateAllStyles) {
-          btnGenerateAllStyles.disabled = false;
-          btnGenerateAllStyles.style.opacity = "1";
-        }
+        if (genAllBtn) genAllBtn.disabled = false;
       }
     }
 
-    btnGenerateAllStyles.addEventListener('click', () => runStyleRewrite("all"));
+    document.getElementById('btn-generate-all-tones').addEventListener('click', () => runToneRewrite("all"));
 
-    // Quick style chips in toolbar
-    document.querySelectorAll('.style-quick-chip').forEach(btn => {
+    document.querySelectorAll('.btn-tone-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        const style = btn.getAttribute('data-style');
-        runStyleRewrite(style);
+        const tone = btn.getAttribute('data-tone');
+        runToneRewrite(tone);
       });
     });
 
-    // Delegated actions for style proposal cards (Copy, Paste to App, Use in Editor)
-    rewriteCardsContainer.addEventListener('click', async (e) => {
-      const actionBtn = e.target.closest('.style-btn-action');
-      if (!actionBtn) return;
+    // Delegated actions for tone proposal cards
+    document.getElementById('proposals-list').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
 
-      const action = actionBtn.getAttribute('data-action');
-      const targetId = actionBtn.getAttribute('data-target');
+      const action = btn.getAttribute('data-action');
+      const targetId = btn.getAttribute('data-target');
       const textEl = document.getElementById(targetId);
       const text = textEl ? textEl.innerText.trim() : "";
 
-      if (!text || text.includes("is thinking...") || text.includes("Click \"Generate All\"")) return;
+      if (!text || text.includes("is writing...") || text.includes("Click \"Generate All\"")) return;
 
       if (action === 'copy') {
         navigator.clipboard.writeText(text);
-        const orig = actionBtn.innerText;
-        actionBtn.innerText = "✓ Copied!";
-        setTimeout(() => { actionBtn.innerText = orig; }, 1500);
-      } else if (action === 'paste-active') {
-        const orig = actionBtn.innerText;
-        actionBtn.innerText = "🎯 Pasting...";
+        showToast("Copied rewrite to clipboard!");
+      } else if (action === 'paste-app') {
+        showToast("Pasting to active app...", "🎯");
         await fetch('/api/paste_text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: text })
         });
-        actionBtn.innerText = "✓ Pasted!";
-        setTimeout(() => { actionBtn.innerText = orig; }, 1500);
-      } else if (action === 'use-in-editor') {
-        editor.value = text;
-        switchTab('grammar');
-        updateStats();
-        runGrammarCheck();
+      } else if (action === 'apply-doc') {
+        docState.setText(text, 'tone-applied');
+        switchAppTab('proofread');
+        showToast("Applied rewrite to document!");
       }
     });
 
-    // ==========================================
-    // 🌐 DEEPL TRANSLATOR INTERFACE LOGIC
-    // ==========================================
-    const transSource = document.getElementById('translate-source');
-    const transTarget = document.getElementById('translate-target');
-    const sourceLangSelect = document.getElementById('source-lang-select');
-    const targetLangSelect = document.getElementById('target-lang-select');
-    const detectedLangPill = document.getElementById('detected-lang-pill');
-    const sourceCharCount = document.getElementById('source-char-count');
-    const targetCharCount = document.getElementById('target-char-count');
-    const transLoading = document.getElementById('translate-loading');
-    const transSpeedLabel = document.getElementById('translation-speed-label');
-    const checkUseAiTrans = document.getElementById('check-use-ai-trans');
+    // ============================================================
+    // 🌐 NEURAL TRANSLATION ENGINE
+    // ============================================================
+    const transSourceText = document.getElementById('trans-source-text');
+    const transTargetText = document.getElementById('trans-target-text');
+    const transSourceLang = document.getElementById('trans-source-lang');
+    const transTargetLang = document.getElementById('trans-target-lang');
+    const transSpeedBadge = document.getElementById('trans-speed-badge');
+    const transDetectedLabel = document.getElementById('trans-detected-label');
+    const transSourceChars = document.getElementById('trans-source-chars');
+    const transTargetChars = document.getElementById('trans-target-chars');
 
-    let transTimeout = null;
-    let transAbortController = null;
+    let transDebounce = null;
+    let transController = null;
 
-    function updateTranslateCounts() {
-      const srcLen = (transSource.value || "").length;
-      const tgtLen = (transTarget.value || "").length;
-      sourceCharCount.innerText = `${srcLen} characters`;
-      targetCharCount.innerText = `${tgtLen} characters`;
-    }
+    async function runNeuralTranslation() {
+      const text = transSourceText.value || "";
+      if (transSourceChars) transSourceChars.innerText = `${text.length} characters`;
 
-    async function runTranslation() {
-      const text = transSource.value || "";
-      updateTranslateCounts();
-
-      if (transAbortController) {
-        transAbortController.abort();
-        transAbortController = null;
+      if (transController) {
+        transController.abort();
+        transController = null;
       }
 
       if (!text.trim()) {
-        transTarget.value = "";
-        detectedLangPill.style.display = 'none';
-        transSpeedLabel.innerText = "Ready";
-        transLoading.style.display = 'none';
+        transTargetText.value = "";
+        if (transTargetChars) transTargetChars.innerText = "0 characters";
+        if (transDetectedLabel) transDetectedLabel.style.display = 'none';
+        if (transSpeedBadge) transSpeedBadge.innerText = "⚡ Ready";
         return;
       }
 
-      transLoading.style.display = 'flex';
-      const startTime = performance.now();
-      const useAi = checkUseAiTrans ? checkUseAiTrans.checked : true;
+      if (transSpeedBadge) transSpeedBadge.innerText = "⚡ Translating...";
+      const startT = performance.now();
 
-      transAbortController = new AbortController();
-      const signal = transAbortController.signal;
-
+      transController = new AbortController();
       try {
         const res = await fetch('/api/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text,
-            from: sourceLangSelect.value,
-            to: targetLangSelect.value,
-            use_ai: useAi
+            from: transSourceLang.value,
+            to: transTargetLang.value,
+            use_ai: true
           }),
-          signal: signal
+          signal: transController.signal
         });
         const data = await res.json();
-        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+        const duration = ((performance.now() - startT) / 1000).toFixed(2);
 
-        transTarget.value = data.translated || "";
-        updateTranslateCounts();
+        transTargetText.value = data.translated || "";
+        if (transTargetChars) transTargetChars.innerText = `${(data.translated || "").length} characters`;
+        if (transSpeedBadge) transSpeedBadge.innerText = `⚡ ${duration}s • Qwen 2.5 Neural AI`;
 
-        if (sourceLangSelect.value === 'auto' && data.detected) {
-          detectedLangPill.innerText = `Detected: ${data.detected.toUpperCase()}`;
-          detectedLangPill.style.display = 'inline-block';
+        if (transSourceLang.value === 'auto' && data.detected) {
+          if (transDetectedLabel) {
+            transDetectedLabel.innerText = `Detected: ${data.detected.toUpperCase()}`;
+            transDetectedLabel.style.display = 'inline';
+          }
         } else {
-          detectedLangPill.style.display = 'none';
+          if (transDetectedLabel) transDetectedLabel.style.display = 'none';
         }
-
-        const engineRaw = (data.engine || "").toLowerCase();
-        let engineName = "Neural AI";
-        if (engineRaw.includes("qwen")) {
-          engineName = "✨ Qwen2.5 AI";
-        } else if (engineRaw.includes("phi")) {
-          engineName = "✨ Phi-3-Mini AI";
-        } else if (engineRaw.includes("argos")) {
-          engineName = "Argos Neural";
-        }
-        transSpeedLabel.innerText = `Translated in ${duration}s (${engineName} • 100% offline)`;
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          return;
-        }
-        console.error("Translation error:", err);
-        transSpeedLabel.innerText = "Translation error";
-      } finally {
-        transLoading.style.display = 'none';
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        if (transSpeedBadge) transSpeedBadge.innerText = "Translation error";
       }
     }
 
-    transSource.addEventListener('input', () => {
-      clearTimeout(transTimeout);
-      transTimeout = setTimeout(() => runTranslation(), 600);
+    transSourceText.addEventListener('input', () => {
+      clearTimeout(transDebounce);
+      transDebounce = setTimeout(runNeuralTranslation, 450);
     });
 
-    sourceLangSelect.addEventListener('change', () => runTranslation());
-    targetLangSelect.addEventListener('change', () => runTranslation());
-    if (checkUseAiTrans) {
-      checkUseAiTrans.addEventListener('change', () => runTranslation());
-    }
+    transSourceLang.addEventListener('change', runNeuralTranslation);
+    transTargetLang.addEventListener('change', runNeuralTranslation);
 
-    // Swap Languages button
-    document.getElementById('btn-swap-langs').addEventListener('click', () => {
-      const currentSrc = sourceLangSelect.value;
-      const currentTgt = targetLangSelect.value;
+    // Swap translation languages
+    document.getElementById('btn-swap-trans').addEventListener('click', () => {
+      const src = transSourceLang.value;
+      const tgt = transTargetLang.value;
+      transSourceLang.value = tgt === 'auto' ? 'en' : tgt;
+      transTargetLang.value = src === 'auto' ? 'en' : src;
 
-      if (currentSrc !== 'auto') {
-        sourceLangSelect.value = currentTgt;
-        targetLangSelect.value = currentSrc;
-      } else {
-        sourceLangSelect.value = currentTgt;
-        targetLangSelect.value = 'en';
-      }
-
-      const tempText = transSource.value;
-      transSource.value = transTarget.value;
-      transTarget.value = tempText;
-
-      runTranslation();
+      const tmp = transSourceText.value;
+      transSourceText.value = transTargetText.value;
+      transTargetText.value = tmp;
+      runNeuralTranslation();
     });
 
-    // Copy Translation
-    document.getElementById('btn-trans-copy').addEventListener('click', (e) => {
-      if (transTarget.value) {
-        navigator.clipboard.writeText(transTarget.value);
-        const originalText = e.target.innerText;
-        e.target.innerText = "✓ Copied!";
-        setTimeout(() => { e.target.innerText = originalText; }, 1500);
+    // Translation copy and paste
+    document.getElementById('btn-trans-copy').addEventListener('click', () => {
+      if (transTargetText.value) {
+        navigator.clipboard.writeText(transTargetText.value);
+        showToast("Copied translation!");
       }
     });
 
-    // Paste source text
     document.getElementById('btn-trans-paste').addEventListener('click', async () => {
       try {
         const clip = await navigator.clipboard.readText();
         if (clip) {
-          transSource.value = clip;
-          runTranslation();
+          transSourceText.value = clip;
+          runNeuralTranslation();
         }
       } catch (e) {
-        transSource.focus();
+        transSourceText.focus();
       }
     });
 
-    // Clear translation source
     document.getElementById('btn-trans-clear').addEventListener('click', () => {
-      transSource.value = "";
-      transTarget.value = "";
-      updateTranslateCounts();
-      detectedLangPill.style.display = 'none';
-      transSpeedLabel.innerText = "Ready";
-      transSource.focus();
+      transSourceText.value = "";
+      transTargetText.value = "";
+      if (transSourceChars) transSourceChars.innerText = "0 characters";
+      if (transTargetChars) transTargetChars.innerText = "0 characters";
+      if (transSpeedBadge) transSpeedBadge.innerText = "⚡ Ready";
+      if (transDetectedLabel) transDetectedLabel.style.display = 'none';
+      transSourceText.focus();
     });
 
-    // Paste to Active App button (sends to whatever app is underneath, e.g. WhatsApp, Slack, Notes)
-    document.getElementById('btn-trans-send-active').addEventListener('click', async () => {
-      if (!transTarget.value) return;
+    document.getElementById('btn-trans-paste-app').addEventListener('click', async () => {
+      if (!transTargetText.value) return;
+      showToast("Pasting to active app...", "🎯");
       await fetch('/api/paste_text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: transTarget.value })
+        body: JSON.stringify({ text: transTargetText.value })
       });
     });
 
-    // Initial load & periodic permission / AI status polling
+    // ============================================================
+    // TOOLBAR COPY / PASTE / CLEAR HELPERS
+    // ============================================================
+    function setupEditorToolbars(ed, btnPaste, btnCopy, btnClear) {
+      if (btnPaste) {
+        btnPaste.addEventListener('click', async () => {
+          try {
+            const clip = await navigator.clipboard.readText();
+            if (clip) {
+              docState.setText(clip, ed === mainEditor ? 'editor' : 'rewrite');
+              showToast("Pasted from clipboard");
+            }
+          } catch (e) {
+            ed.focus();
+          }
+        });
+      }
+      if (btnCopy) {
+        btnCopy.addEventListener('click', () => {
+          if (docState.text) {
+            navigator.clipboard.writeText(docState.text);
+            showToast("Copied document to clipboard");
+          }
+        });
+      }
+      if (btnClear) {
+        btnClear.addEventListener('click', () => {
+          docState.setText("", 'external');
+          ed.focus();
+          showToast("Document cleared");
+        });
+      }
+    }
+
+    setupEditorToolbars(mainEditor, document.getElementById('btn-ed-paste'), document.getElementById('btn-ed-copy'), document.getElementById('btn-ed-clear'));
+    setupEditorToolbars(rewriteEditor, document.getElementById('btn-rw-paste'), document.getElementById('btn-rw-copy'), document.getElementById('btn-rw-clear'));
+
+    // ============================================================
+    // MODAL DIALOGS (Chrome Extension)
+    // ============================================================
+    const extModal = document.getElementById('ext-modal');
+    document.getElementById('btn-open-ext-modal').addEventListener('click', () => {
+      extModal.style.display = 'flex';
+    });
+    document.getElementById('btn-close-ext').addEventListener('click', () => {
+      extModal.style.display = 'none';
+    });
+    extModal.addEventListener('click', (e) => {
+      if (e.target === extModal) extModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-reveal-ext-folder').addEventListener('click', async () => {
+      await fetch('/api/open_extension_folder', { method: 'POST' });
+      showToast("Opened extension folder in Finder", "📂");
+      extModal.style.display = 'none';
+    });
+
+    // ============================================================
+    // AI ENGINE STATUS CHECK
+    // ============================================================
+    const aiStatusIndicator = document.getElementById('ai-status-indicator');
+    const aiStatusLabel = document.getElementById('ai-status-label');
+
+    async function checkEngineStatus() {
+      try {
+        const res = await fetch('/api/ai/status');
+        const data = await res.json();
+        if (data.ollama_running && data.model_installed) {
+          const modelName = (data.active_model || 'Qwen 2.5').split(':')[0];
+          aiStatusLabel.innerText = `● ${modelName.toUpperCase()} Active`;
+          aiStatusIndicator.style.color = '#34d399';
+        } else if (data.installing) {
+          aiStatusLabel.innerText = "⏳ Pulling Model...";
+        } else {
+          aiStatusLabel.innerText = "⚡ Local AI Offline";
+          aiStatusIndicator.style.color = '#f59e0b';
+        }
+      } catch (e) {}
+    }
+
+    // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      updateStats();
-      updateRewriteCounts();
-      checkPermissionsStatus();
-      checkAIStatus();
-      runGrammarCheck();
-      setInterval(checkPermissionsStatus, 2000);
-      setInterval(checkAIStatus, 5000);
+      docState.setText(docState.text, 'external');
+      checkEngineStatus();
+      setInterval(checkEngineStatus, 5000);
     });
   </script>
 </body>

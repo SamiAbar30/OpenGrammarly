@@ -1002,9 +1002,9 @@
         <span class="status-dot"></span>
         <span id="server-status">All Systems Online</span>
       </div>
-      <div class="ai-status-pill" id="ai-status-pill" title="Local Phi-3-Mini Offline AI">
+      <div class="ai-status-pill" id="ai-status-pill" title="Local Qwen 2.5 Offline AI">
         <span class="ai-status-dot"></span>
-        <span id="ai-status-label">Phi-3 AI Ready</span>
+        <span id="ai-status-label">Qwen 2.5 AI Ready</span>
       </div>
     </div>
 
@@ -1014,7 +1014,7 @@
       </button>
       <button class="nav-tab" id="tab-btn-rewrite">
         <span>✨ AI Styles & Rewrite</span>
-        <span class="nav-ai-pill">Phi-3-Mini</span>
+        <span class="nav-ai-pill">Qwen 2.5</span>
       </button>
       <button class="nav-tab" id="tab-btn-translate">
         <span>🌐 DeepL Translator</span>
@@ -1129,7 +1129,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
           </div>
           <div class="score-badge" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;">
             <span>AI Model:</span>
-            <span id="rewrite-model-label">Phi-3-Mini (Apple Metal)</span>
+            <span id="rewrite-model-label">Qwen 2.5 1.5B (Apple Metal)</span>
           </div>
         </div>
       </div>
@@ -1242,7 +1242,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
 
         <div class="translate-box-footer">
           <span id="source-char-count">0 characters</span>
-          <span class="engine-badge" id="source-engine-badge">⚡ Argos Neural + Phi-3 AI</span>
+          <span class="engine-badge" id="source-engine-badge">⚡ Qwen 2.5 Neural AI</span>
         </div>
       </div>
 
@@ -1741,7 +1741,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
       stylesToUpdate.forEach(s => {
         const el = document.getElementById(`text-${s}`);
         if (el) {
-          el.innerHTML = '<span style="color: #c084fc; font-style: italic;">✨ Phi-3-Mini is thinking...</span>';
+          el.innerHTML = '<span style="color: #c084fc; font-style: italic;">✨ Qwen 2.5 is polishing...</span>';
         }
       });
 
@@ -1771,7 +1771,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
         console.error("Rewrite error:", err);
         stylesToUpdate.forEach(s => {
           const el = document.getElementById(`text-${s}`);
-          if (el) el.innerText = "Error generating rewrite with Phi-3-Mini.";
+          if (el) el.innerText = "Error generating rewrite with local AI.";
         });
       } finally {
         if (btnGenerateAllStyles) {

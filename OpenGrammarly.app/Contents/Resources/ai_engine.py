@@ -103,15 +103,45 @@ def install_phi3_async():
     return {"status": "started", "model": target}
 
 
-def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = None) -> str:
+def prewarm_model():
+    """Keep active model loaded in Apple Silicon GPU memory permanently."""
+    def _worker():
+        try:
+            if is_ollama_running():
+                model = get_active_model()
+                if model:
+                    body = {
+                        "model": model,
+                        "prompt": "hi",
+                        "stream": False,
+                        "keep_alive": -1,
+                        "options": {"num_predict": 1},
+                    }
+                    req = urllib.request.Request(
+                        f"{OLLAMA_HOST}/api/generate",
+                        data=json.dumps(body).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    with urllib.request.urlopen(req, timeout=10.0) as resp:
+                        resp.read()
+                    logger.info(f"OpenGrammarly: AI Model {model} pinned in GPU VRAM.")
+        except Exception as e:
+            logger.debug(f"OpenGrammarly: AI pre-warm skipped: {e}")
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+
+def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = None, response_format: str = None) -> str:
     active = model or get_active_model() or MODEL_NAME
     word_count = len(prompt.split())
-    max_tokens = max(48, min(180, word_count * 3))
+    max_tokens = max(64, min(240, word_count * 4))
 
     body = {
         "model": active,
         "prompt": prompt,
         "stream": False,
+        "keep_alive": -1,
         "options": {
             "temperature": 0.1,
             "top_p": 0.9,
@@ -125,6 +155,8 @@ def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = Non
     }
     if system_prompt:
         body["system"] = system_prompt
+    if response_format:
+        body["format"] = response_format
 
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
@@ -137,13 +169,14 @@ def _call_ollama_generate(prompt: str, system_prompt: str = "", model: str = Non
         res = json.loads(resp.read().decode("utf-8"))
         out = res.get("response", "").strip()
 
-        # Stop token safety: clean synthetic few-shot loops
-        for delim in ["\n\nText to", "\nText to", "Text to correct:", "Text to rewrite:", "Text to translate:", "\n\nOriginal:"]:
-            if delim in out:
-                out = out.split(delim)[0].strip()
+        if response_format != "json":
+            # Stop token safety: clean synthetic few-shot loops
+            for delim in ["\n\nText to", "\nText to", "Text to correct:", "Text to rewrite:", "Text to translate:", "\n\nOriginal:"]:
+                if delim in out:
+                    out = out.split(delim)[0].strip()
 
-        if out.startswith('"') and out.endswith('"') and len(out) > 2:
-            out = out[1:-1]
+            if out.startswith('"') and out.endswith('"') and len(out) > 2:
+                out = out[1:-1]
         return out
 
 
@@ -212,14 +245,65 @@ def rewrite_style(text: str, style: str = "formal") -> dict:
 
 
 def rewrite_all_styles(text: str) -> dict:
-    """Generate proposals for all primary styles."""
+    """Generate proposals for all primary styles efficiently in a single pass."""
     if not text or not text.strip():
         return {"styles": {}}
 
+    if not is_ollama_running():
+        return {
+            "original": text,
+            "styles": {},
+            "error": "Ollama is not running",
+            "status": "ai_offline",
+        }
+
+    def _extract_text(val) -> str:
+        if isinstance(val, str):
+            return val.strip()
+        if isinstance(val, dict):
+            for subk in ["text", "rewritten", "sentence", "output", "result"]:
+                if subk in val and isinstance(val[subk], str):
+                    return val[subk].strip()
+            for v in val.values():
+                if isinstance(v, str):
+                    return v.strip()
+        return ""
+
+    # Attempt 1: Ultra-fast single-pass JSON generation (~1-1.5s total)
+    prompt = (
+        f"Rewrite the following text into 4 distinct styles:\n"
+        f"- formal: professional business tone, no email greetings or sign-offs\n"
+        f"- casual: friendly, warm, natural conversational tone\n"
+        f"- concise: short, direct, eliminating all filler words\n"
+        f"- confident: assertive, decisive, eliminate passive voice and apologies\n\n"
+        f"Input text: \"{text.strip()}\"\n\n"
+        f"Example JSON structure:\n"
+        f"{{\"formal\": \"text here\", \"casual\": \"text here\", \"concise\": \"text here\", \"confident\": \"text here\"}}"
+    )
+    sys_prompt = (
+        "You are an expert writing assistant. You must respond strictly in valid JSON format "
+        "with keys: formal, casual, concise, confident. Output ONLY valid JSON, no markdown formatting."
+    )
+
+    try:
+        raw_json = _call_ollama_generate(prompt, system_prompt=sys_prompt, response_format="json")
+        styles = json.loads(raw_json)
+        clean_styles = {}
+        for k in ["formal", "casual", "concise", "confident"]:
+            extracted = _extract_text(styles.get(k))
+            if extracted:
+                clean_styles[k] = extracted
+            else:
+                clean_styles[k] = text.strip()
+        return {"original": text, "styles": clean_styles, "status": "success"}
+    except Exception as e:
+        logger.warning(f"Single pass JSON rewrite failed, falling back to sequential: {e}")
+
+    # Fallback: Sequential generation
     results = {}
     for style in ["formal", "casual", "concise", "confident"]:
         res = rewrite_style(text, style)
-        results[style] = res.get("rewritten", "")
+        results[style] = res.get("rewritten", text)
 
     return {"original": text, "styles": results, "status": "success"}
 

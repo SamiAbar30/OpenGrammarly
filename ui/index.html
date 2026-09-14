@@ -1841,6 +1841,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
     const checkUseAiTrans = document.getElementById('check-use-ai-trans');
 
     let transTimeout = null;
+    let transAbortController = null;
 
     function updateTranslateCounts() {
       const srcLen = (transSource.value || "").length;
@@ -1853,16 +1854,25 @@ Their is no doubt that this tool is very helpfull.</textarea>
       const text = transSource.value || "";
       updateTranslateCounts();
 
+      if (transAbortController) {
+        transAbortController.abort();
+        transAbortController = null;
+      }
+
       if (!text.trim()) {
         transTarget.value = "";
         detectedLangPill.style.display = 'none';
         transSpeedLabel.innerText = "Ready";
+        transLoading.style.display = 'none';
         return;
       }
 
       transLoading.style.display = 'flex';
       const startTime = performance.now();
       const useAi = checkUseAiTrans ? checkUseAiTrans.checked : true;
+
+      transAbortController = new AbortController();
+      const signal = transAbortController.signal;
 
       try {
         const res = await fetch('/api/translate', {
@@ -1873,7 +1883,8 @@ Their is no doubt that this tool is very helpfull.</textarea>
             from: sourceLangSelect.value,
             to: targetLangSelect.value,
             use_ai: useAi
-          })
+          }),
+          signal: signal
         });
         const data = await res.json();
         const duration = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -1888,9 +1899,20 @@ Their is no doubt that this tool is very helpfull.</textarea>
           detectedLangPill.style.display = 'none';
         }
 
-        const engineName = data.engine === 'phi3' ? "✨ Phi-3-Mini AI" : "Argos Neural";
+        const engineRaw = (data.engine || "").toLowerCase();
+        let engineName = "Neural AI";
+        if (engineRaw.includes("qwen")) {
+          engineName = "✨ Qwen2.5 AI";
+        } else if (engineRaw.includes("phi")) {
+          engineName = "✨ Phi-3-Mini AI";
+        } else if (engineRaw.includes("argos")) {
+          engineName = "Argos Neural";
+        }
         transSpeedLabel.innerText = `Translated in ${duration}s (${engineName} • 100% offline)`;
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return;
+        }
         console.error("Translation error:", err);
         transSpeedLabel.innerText = "Translation error";
       } finally {
@@ -1900,7 +1922,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
 
     transSource.addEventListener('input', () => {
       clearTimeout(transTimeout);
-      transTimeout = setTimeout(() => runTranslation(), 300);
+      transTimeout = setTimeout(() => runTranslation(), 600);
     });
 
     sourceLangSelect.addEventListener('change', () => runTranslation());

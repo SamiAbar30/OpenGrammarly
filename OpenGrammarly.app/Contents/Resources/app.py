@@ -685,8 +685,15 @@ def fix_active_selection():
             ], check=False)
             return
 
-        # 3. Auto-correct text using our engine
+        # 3. Auto-correct text using rule-based engine + AI fallback
         fixed, count = auto_correct_text(raw_text, "auto")
+        if count == 0 and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+            ai_res = ai_engine.ai_fix_grammar(raw_text)
+            if ai_res.get("status") == "success" and ai_res.get("fixed"):
+                candidate = ai_res.get("fixed").strip()
+                if candidate and candidate != raw_text.strip():
+                    fixed = candidate
+                    count = 1
 
         if count > 0 and fixed != raw_text:
             # 4. Copy fixed text back to clipboard
@@ -884,29 +891,26 @@ def setup_menu_bar(window):
 
 
 def start_floating_pill_daemon():
-    """Start the floating selection pill watcher."""
-    script = os.path.join(APP_DIR, "floating_widget.py")
-    if not os.path.exists(script):
-        script = os.path.join(APP_DIR, "Resources", "floating_widget.py")
-    if os.path.exists(script):
-        subprocess.Popen([sys.executable, script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    """Disabled by default to prevent clipboard / selection interference with browser extensions."""
+    pass
 
 
 def main():
     # 1. Ensure LanguageTool background engine is running
     ensure_languagetool_running()
 
-    # 2. Start HTTP server thread
+    # 2. Pre-warm local AI model in GPU VRAM for instant inference
+    if ai_engine:
+        ai_engine.prewarm_model()
+
+    # 3. Start HTTP server thread
     t_server = threading.Thread(target=start_server, daemon=True)
     t_server.start()
 
-    # 3. Start global hotkey daemon (Cmd+Alt+G / Cmd+Shift+G)
+    # 4. Start global hotkey daemon (Cmd+Alt+G / Cmd+Shift+G)
     start_global_hotkey_daemon()
 
-    # 5. Start floating pill daemon
-    start_floating_pill_daemon()
-
-    # 6. Ensure Chrome extension is exported to ~/Downloads/OpenGrammarly-Extension
+    # 5. Ensure Chrome extension is exported to ~/Downloads/OpenGrammarly-Extension
     ensure_extension_exported()
 
     # Wait for server ready

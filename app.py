@@ -36,6 +36,11 @@ except ImportError:
 try:
     import AppKit
     import Quartz
+    if AppKit:
+        try:
+            AppKit.NSProcessInfo.processInfo().setProcessName_("OpenGrammarly")
+        except Exception:
+            pass
 except Exception:
     AppKit = None
     Quartz = None
@@ -448,22 +453,25 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode("utf-8"))
             return
 
-        # Static assets
+        # Static assets with path-traversal protection
         if path in ("/", "/index.html"):
-            file_path = os.path.join(UI_DIR, "index.html")
+            rel_file = "index.html"
             mime = "text/html; charset=utf-8"
         elif path == "/logo.png":
-            file_path = os.path.join(UI_DIR, "logo.png")
+            rel_file = "logo.png"
             mime = "image/png"
         else:
-            file_path = os.path.join(UI_DIR, path.lstrip("/"))
+            rel_file = path.lstrip("/")
             mime = "text/plain"
 
-        if os.path.exists(file_path):
+        safe_dir = os.path.realpath(UI_DIR)
+        target_path = os.path.realpath(os.path.join(UI_DIR, rel_file))
+
+        if target_path.startswith(safe_dir) and os.path.exists(target_path) and os.path.isfile(target_path):
             self.send_response(200)
             self.send_header("Content-Type", mime)
             self.end_headers()
-            with open(file_path, "rb") as f:
+            with open(target_path, "rb") as f:
                 self.wfile.write(f.read())
         else:
             self.send_response(404)
@@ -471,6 +479,14 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         content_length = int(self.headers.get("Content-Length", 0))
+        # Enforce 1MB payload limit for stability and security
+        if content_length > 1_048_576:
+            self.send_response(413)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Payload exceeds 1MB limit"}).encode("utf-8"))
+            return
+
         body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else ""
         payload = {}
         if body:
@@ -751,7 +767,10 @@ def _hotkey_supervisor():
                 print("[OpenGrammarly] Hotkey supervisor init error:", e)
 
         was_trusted = trusted
-        time.sleep(2.0)
+        if registered and trusted:
+            time.sleep(30.0)
+        else:
+            time.sleep(3.0)
 
 
 def start_global_hotkey_daemon():
@@ -797,6 +816,23 @@ def toggle_launch_at_login() -> bool:
             return False
 
 
+def cleanup_and_exit(*args):
+    """Cleanly and instantly terminate all components, hotkeys, and server sockets."""
+    global httpd, _hotkey_listener
+    try:
+        if _hotkey_listener:
+            _hotkey_listener.stop()
+    except Exception:
+        pass
+    try:
+        if httpd:
+            httpd.shutdown()
+            httpd.server_close()
+    except Exception:
+        pass
+    os._exit(0)
+
+
 if AppKit:
     class MenuHandler(AppKit.NSObject):
         def setWindow_(self, win):
@@ -827,7 +863,7 @@ if AppKit:
             sender.setState_(AppKit.NSControlStateValueOn if new_state else AppKit.NSControlStateValueOff)
 
         def quitApp_(self, sender):
-            AppKit.NSApplication.sharedApplication().terminate_(self)
+            cleanup_and_exit()
 
 _status_item = None
 _menu_handler = None
@@ -929,15 +965,14 @@ def main():
     # 7. Setup macOS Menu Bar fast-access icon
     setup_menu_bar(window)
 
-    # 8. Keep app running in Menu Bar when window is closed (red X button)
-    def on_closing():
-        window.hide()
-        return False
-
-    window.events.closing += on_closing
+    # 8. Clean shutdown when window is closed
+    window.events.closed += cleanup_and_exit
 
     # Start PyWebView Cocoa event loop
     webview.start()
+
+    # Clean exit when PyWebView event loop finishes
+    cleanup_and_exit()
 
 
 if __name__ == "__main__":

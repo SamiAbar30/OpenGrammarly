@@ -759,6 +759,236 @@
     .btn-modal-primary:hover {
       box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
     }
+
+    /* ✨ AI Styles & Tone Navigation & Badges */
+    .nav-ai-pill {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(59, 130, 246, 0.25));
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      color: #c084fc;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .ai-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #d8b4fe;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ai-status-pill:hover {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: rgba(168, 85, 247, 0.5);
+    }
+
+    .ai-status-dot {
+      width: 7px;
+      height: 7px;
+      background: #a855f7;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #a855f7;
+    }
+
+    /* ✨ AI Rewrite Workspace */
+    .rewrite-workspace {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .rewrite-sidebar {
+      width: 440px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .rewrite-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rewrite-cards-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .style-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .style-card:hover {
+      border-color: rgba(168, 85, 247, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .style-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .style-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .style-card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .style-card-text {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text-main);
+      user-select: text;
+      white-space: pre-wrap;
+      min-height: 24px;
+    }
+
+    .style-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .style-btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .style-btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .style-btn-action.primary {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+      border: none;
+    }
+    .style-btn-action.primary:hover {
+      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
+    }
+
+    .ai-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .ai-toggle-label input {
+      accent-color: #a855f7;
+      cursor: pointer;
+    }
+
+    .btn-ai-generate {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      color: white;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn-ai-generate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(168, 85, 247, 0.45);
+    }
+
+    .style-quick-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .style-quick-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .style-quick-chip:hover {
+      background: rgba(168, 85, 247, 0.18);
+      border-color: #a855f7;
+      color: #d8b4fe;
+    }
   </style>
 </head>
 <body>
@@ -772,11 +1002,19 @@
         <span class="status-dot"></span>
         <span id="server-status">All Systems Online</span>
       </div>
+      <div class="ai-status-pill" id="ai-status-pill" title="Local Phi-3-Mini Offline AI">
+        <span class="ai-status-dot"></span>
+        <span id="ai-status-label">Phi-3 AI Ready</span>
+      </div>
     </div>
 
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab-btn-grammar">
         <span>✍️ Grammar & Style</span>
+      </button>
+      <button class="nav-tab" id="tab-btn-rewrite">
+        <span>✨ AI Styles & Rewrite</span>
+        <span class="nav-ai-pill">Phi-3-Mini</span>
       </button>
       <button class="nav-tab" id="tab-btn-translate">
         <span>🌐 DeepL Translator</span>
@@ -851,6 +1089,123 @@ Their is no doubt that this tool is very helpfull.</textarea>
     </div>
   </div>
 
+  <!-- ✨ AI Styles & Rewrite View (Phi-3-Mini) -->
+  <div id="view-rewrite" class="view-panel" style="display: none;">
+    <div class="rewrite-workspace">
+      <!-- Left: Rewrite Input Editor -->
+      <div class="editor-section">
+        <div class="editor-toolbar">
+          <div class="editor-tools">
+            <button class="tool-btn" id="btn-rewrite-paste">📋 Paste</button>
+            <button class="tool-btn" id="btn-rewrite-copy">📑 Copy</button>
+            <button class="tool-btn" id="btn-rewrite-clear">🗑️ Clear</button>
+          </div>
+
+          <div class="style-quick-chips">
+            <button class="style-quick-chip" data-style="formal">👔 Formal</button>
+            <button class="style-quick-chip" data-style="casual">💬 Casual</button>
+            <button class="style-quick-chip" data-style="concise">✂️ Concise</button>
+            <button class="style-quick-chip" data-style="confident">🦁 Confident</button>
+            <button class="style-quick-chip" data-style="academic">🎓 Academic</button>
+            <button class="btn-ai-generate" id="btn-generate-all-styles">
+              <span>✨ Generate All</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <textarea id="rewrite-input" placeholder="Type or paste any text here to propose rewrites in different styles (Formal, Casual, Concise, Confident)..." spellcheck="false">Hi, how ry you ? i want to ask if we can meet tomorrow to discuss the new project ideas.</textarea>
+        </div>
+
+        <div class="editor-footer">
+          <div style="display: flex; gap: 16px;">
+            <span id="stat-rewrite-words">0 words</span>
+            <span id="stat-rewrite-chars">0 characters</span>
+          </div>
+          <div class="score-badge" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;">
+            <span>AI Model:</span>
+            <span id="rewrite-model-label">Phi-3-Mini (Apple Metal)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: AI Style Proposals Sidebar -->
+      <div class="rewrite-sidebar">
+        <div class="rewrite-header">
+          <div class="assistant-title" id="rewrite-sidebar-title">✨ Tone Proposals</div>
+          <span id="rewrite-status-pill" class="nav-ai-pill">Offline SLM</span>
+        </div>
+
+        <div class="rewrite-cards-container" id="rewrite-cards-container">
+          <div class="style-card" id="card-formal">
+            <div class="style-card-header">
+              <span class="style-badge">👔 Formal</span>
+              <span class="style-card-desc">Executive & business</span>
+            </div>
+            <div class="style-card-text" id="text-formal">Click "Generate All" or "👔 Formal" to rewrite...</div>
+            <div class="style-card-actions">
+              <button class="style-btn-action" data-action="copy" data-target="text-formal">📋 Copy</button>
+              <button class="style-btn-action primary" data-action="paste-active" data-target="text-formal">🎯 Paste to App</button>
+              <button class="style-btn-action" data-action="use-in-editor" data-target="text-formal">✍️ Editor</button>
+            </div>
+          </div>
+
+          <div class="style-card" id="card-casual">
+            <div class="style-card-header">
+              <span class="style-badge" style="color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3);">💬 Casual</span>
+              <span class="style-card-desc">Friendly & natural</span>
+            </div>
+            <div class="style-card-text" id="text-casual">Click "Generate All" or "💬 Casual" to rewrite...</div>
+            <div class="style-card-actions">
+              <button class="style-btn-action" data-action="copy" data-target="text-casual">📋 Copy</button>
+              <button class="style-btn-action primary" data-action="paste-active" data-target="text-casual">🎯 Paste to App</button>
+              <button class="style-btn-action" data-action="use-in-editor" data-target="text-casual">✍️ Editor</button>
+            </div>
+          </div>
+
+          <div class="style-card" id="card-concise">
+            <div class="style-card-header">
+              <span class="style-badge" style="color: #34d399; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3);">✂️ Concise</span>
+              <span class="style-card-desc">Direct & no filler</span>
+            </div>
+            <div class="style-card-text" id="text-concise">Click "Generate All" or "✂️ Concise" to rewrite...</div>
+            <div class="style-card-actions">
+              <button class="style-btn-action" data-action="copy" data-target="text-concise">📋 Copy</button>
+              <button class="style-btn-action primary" data-action="paste-active" data-target="text-concise">🎯 Paste to App</button>
+              <button class="style-btn-action" data-action="use-in-editor" data-target="text-concise">✍️ Editor</button>
+            </div>
+          </div>
+
+          <div class="style-card" id="card-confident">
+            <div class="style-card-header">
+              <span class="style-badge" style="color: #fbbf24; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3);">🦁 Confident</span>
+              <span class="style-card-desc">Decisive & assertive</span>
+            </div>
+            <div class="style-card-text" id="text-confident">Click "Generate All" or "🦁 Confident" to rewrite...</div>
+            <div class="style-card-actions">
+              <button class="style-btn-action" data-action="copy" data-target="text-confident">📋 Copy</button>
+              <button class="style-btn-action primary" data-action="paste-active" data-target="text-confident">🎯 Paste to App</button>
+              <button class="style-btn-action" data-action="use-in-editor" data-target="text-confident">✍️ Editor</button>
+            </div>
+          </div>
+
+          <div class="style-card" id="card-academic">
+            <div class="style-card-header">
+              <span class="style-badge" style="color: #f472b6; background: rgba(244, 114, 182, 0.12); border-color: rgba(244, 114, 182, 0.3);">🎓 Academic</span>
+              <span class="style-card-desc">Articulate & scholarly</span>
+            </div>
+            <div class="style-card-text" id="text-academic">Click "Generate All" or "🎓 Academic" to rewrite...</div>
+            <div class="style-card-actions">
+              <button class="style-btn-action" data-action="copy" data-target="text-academic">📋 Copy</button>
+              <button class="style-btn-action primary" data-action="paste-active" data-target="text-academic">🎯 Paste to App</button>
+              <button class="style-btn-action" data-action="use-in-editor" data-target="text-academic">✍️ Editor</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- DeepL Translator View -->
   <div id="view-translate" class="view-panel" style="display: none;">
     <div class="translate-workspace">
@@ -882,7 +1237,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
 
         <div class="translate-box-footer">
           <span id="source-char-count">0 characters</span>
-          <span class="engine-badge">⚡ Argos Neural Model (CTranslate2)</span>
+          <span class="engine-badge" id="source-engine-badge">⚡ Argos Neural + Phi-3 AI</span>
         </div>
       </div>
 
@@ -904,6 +1259,10 @@ Their is no doubt that this tool is very helpfull.</textarea>
               <option value="pt">Portuguese</option>
               <option value="ar">Arabic</option>
             </select>
+            <label class="ai-toggle-label" title="Use local Phi-3-Mini AI for fluent neural translation">
+              <input type="checkbox" id="check-use-ai-trans" checked>
+              <span>✨ Phi-3 AI</span>
+            </label>
           </div>
           <div class="translate-box-tools">
             <button class="tool-btn" id="btn-trans-copy" title="Copy translated text">📑 Copy</button>
@@ -1202,13 +1561,222 @@ Their is no doubt that this tool is very helpfull.</textarea>
     });
 
     // ==========================================
-    // 🌐 DEEPL TRANSLATOR INTERFACE LOGIC
+    // 🌐 NAVIGATION & TAB SWITCHING (3 TABS)
     // ==========================================
     const tabBtnGrammar = document.getElementById('tab-btn-grammar');
+    const tabBtnRewrite = document.getElementById('tab-btn-rewrite');
     const tabBtnTranslate = document.getElementById('tab-btn-translate');
     const viewGrammar = document.getElementById('view-grammar');
+    const viewRewrite = document.getElementById('view-rewrite');
     const viewTranslate = document.getElementById('view-translate');
 
+    const aiStatusPill = document.getElementById('ai-status-pill');
+    const aiStatusLabel = document.getElementById('ai-status-label');
+
+    function switchTab(activeTab) {
+      tabBtnGrammar.classList.toggle('active', activeTab === 'grammar');
+      tabBtnRewrite.classList.toggle('active', activeTab === 'rewrite');
+      tabBtnTranslate.classList.toggle('active', activeTab === 'translate');
+
+      viewGrammar.style.display = activeTab === 'grammar' ? 'flex' : 'none';
+      viewRewrite.style.display = activeTab === 'rewrite' ? 'flex' : 'none';
+      viewTranslate.style.display = activeTab === 'translate' ? 'flex' : 'none';
+
+      langSelect.style.display = activeTab === 'grammar' ? 'block' : 'none';
+
+      if (activeTab === 'grammar') {
+        editor.focus();
+      } else if (activeTab === 'rewrite') {
+        if (editor.value.trim() && !rewriteInput.value.trim()) {
+          rewriteInput.value = editor.value.trim();
+        }
+        updateRewriteCounts();
+        rewriteInput.focus();
+      } else if (activeTab === 'translate') {
+        transSource.focus();
+        runTranslation();
+      }
+    }
+
+    tabBtnGrammar.addEventListener('click', () => switchTab('grammar'));
+    tabBtnRewrite.addEventListener('click', () => switchTab('rewrite'));
+    tabBtnTranslate.addEventListener('click', () => switchTab('translate'));
+
+    // Check Local AI (Phi-3-Mini) Status
+    async function checkAIStatus() {
+      try {
+        const res = await fetch('/api/ai/status');
+        const data = await res.json();
+        if (data.ollama_running && data.model_installed) {
+          aiStatusLabel.innerText = "Phi-3 AI Ready";
+          aiStatusPill.title = `Model active: ${data.active_model || 'phi3:mini'}`;
+          aiStatusPill.style.borderColor = "rgba(168, 85, 247, 0.4)";
+        } else if (data.installing) {
+          aiStatusLabel.innerText = "⏳ Downloading Phi-3...";
+          aiStatusPill.title = "Pulling model in background...";
+        } else {
+          aiStatusLabel.innerText = "⚡ Setup Phi-3 AI";
+          aiStatusPill.title = "Ollama or Phi-3-Mini not detected. Click to auto-install.";
+        }
+      } catch (e) {}
+    }
+
+    aiStatusPill.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/ai/setup', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'started') {
+          aiStatusLabel.innerText = "⏳ Starting Download...";
+        }
+      } catch (e) {}
+    });
+
+    // ==========================================
+    // ✨ AI STYLES & REWRITE INTERFACE LOGIC
+    // ==========================================
+    const rewriteInput = document.getElementById('rewrite-input');
+    const statRewriteWords = document.getElementById('stat-rewrite-words');
+    const statRewriteChars = document.getElementById('stat-rewrite-chars');
+    const btnGenerateAllStyles = document.getElementById('btn-generate-all-styles');
+    const rewriteCardsContainer = document.getElementById('rewrite-cards-container');
+
+    function updateRewriteCounts() {
+      const text = rewriteInput.value || "";
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      statRewriteWords.innerText = `${words} words`;
+      statRewriteChars.innerText = `${text.length} characters`;
+    }
+
+    rewriteInput.addEventListener('input', updateRewriteCounts);
+
+    // Paste text into rewrite input
+    document.getElementById('btn-rewrite-paste').addEventListener('click', async () => {
+      try {
+        const clip = await navigator.clipboard.readText();
+        if (clip) {
+          rewriteInput.value = clip;
+          updateRewriteCounts();
+        }
+      } catch (e) {
+        rewriteInput.focus();
+      }
+    });
+
+    // Copy rewrite input
+    document.getElementById('btn-rewrite-copy').addEventListener('click', (e) => {
+      if (rewriteInput.value) {
+        navigator.clipboard.writeText(rewriteInput.value);
+        const orig = e.target.innerText;
+        e.target.innerText = "✓ Copied!";
+        setTimeout(() => { e.target.innerText = orig; }, 1500);
+      }
+    });
+
+    // Clear rewrite input
+    document.getElementById('btn-rewrite-clear').addEventListener('click', () => {
+      rewriteInput.value = "";
+      updateRewriteCounts();
+      rewriteInput.focus();
+    });
+
+    // Trigger rewrite for a specific style or all styles
+    async function runStyleRewrite(style = "all") {
+      const text = rewriteInput.value || "";
+      if (!text.trim()) return;
+
+      const stylesToUpdate = style === "all" ? ["formal", "casual", "concise", "confident", "academic"] : [style];
+
+      stylesToUpdate.forEach(s => {
+        const el = document.getElementById(`text-${s}`);
+        if (el) {
+          el.innerHTML = '<span style="color: #c084fc; font-style: italic;">✨ Phi-3-Mini is thinking...</span>';
+        }
+      });
+
+      if (btnGenerateAllStyles) {
+        btnGenerateAllStyles.disabled = true;
+        btnGenerateAllStyles.style.opacity = "0.7";
+      }
+
+      try {
+        const res = await fetch('/api/ai/rewrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, style: style })
+        });
+        const data = await res.json();
+
+        if (style === "all" && data.styles) {
+          for (const [s, val] of Object.entries(data.styles)) {
+            const el = document.getElementById(`text-${s}`);
+            if (el) el.innerText = val || "(No proposal generated)";
+          }
+        } else if (data.rewritten) {
+          const el = document.getElementById(`text-${style}`);
+          if (el) el.innerText = data.rewritten;
+        }
+      } catch (err) {
+        console.error("Rewrite error:", err);
+        stylesToUpdate.forEach(s => {
+          const el = document.getElementById(`text-${s}`);
+          if (el) el.innerText = "Error generating rewrite with Phi-3-Mini.";
+        });
+      } finally {
+        if (btnGenerateAllStyles) {
+          btnGenerateAllStyles.disabled = false;
+          btnGenerateAllStyles.style.opacity = "1";
+        }
+      }
+    }
+
+    btnGenerateAllStyles.addEventListener('click', () => runStyleRewrite("all"));
+
+    // Quick style chips in toolbar
+    document.querySelectorAll('.style-quick-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const style = btn.getAttribute('data-style');
+        runStyleRewrite(style);
+      });
+    });
+
+    // Delegated actions for style proposal cards (Copy, Paste to App, Use in Editor)
+    rewriteCardsContainer.addEventListener('click', async (e) => {
+      const actionBtn = e.target.closest('.style-btn-action');
+      if (!actionBtn) return;
+
+      const action = actionBtn.getAttribute('data-action');
+      const targetId = actionBtn.getAttribute('data-target');
+      const textEl = document.getElementById(targetId);
+      const text = textEl ? textEl.innerText.trim() : "";
+
+      if (!text || text.includes("is thinking...") || text.includes("Click \"Generate All\"")) return;
+
+      if (action === 'copy') {
+        navigator.clipboard.writeText(text);
+        const orig = actionBtn.innerText;
+        actionBtn.innerText = "✓ Copied!";
+        setTimeout(() => { actionBtn.innerText = orig; }, 1500);
+      } else if (action === 'paste-active') {
+        const orig = actionBtn.innerText;
+        actionBtn.innerText = "🎯 Pasting...";
+        await fetch('/api/paste_text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
+        actionBtn.innerText = "✓ Pasted!";
+        setTimeout(() => { actionBtn.innerText = orig; }, 1500);
+      } else if (action === 'use-in-editor') {
+        editor.value = text;
+        switchTab('grammar');
+        updateStats();
+        runGrammarCheck();
+      }
+    });
+
+    // ==========================================
+    // 🌐 DEEPL TRANSLATOR INTERFACE LOGIC
+    // ==========================================
     const transSource = document.getElementById('translate-source');
     const transTarget = document.getElementById('translate-target');
     const sourceLangSelect = document.getElementById('source-lang-select');
@@ -1218,30 +1786,9 @@ Their is no doubt that this tool is very helpfull.</textarea>
     const targetCharCount = document.getElementById('target-char-count');
     const transLoading = document.getElementById('translate-loading');
     const transSpeedLabel = document.getElementById('translation-speed-label');
+    const checkUseAiTrans = document.getElementById('check-use-ai-trans');
 
     let transTimeout = null;
-
-    function switchTab(activeTab) {
-      if (activeTab === 'grammar') {
-        tabBtnGrammar.classList.add('active');
-        tabBtnTranslate.classList.remove('active');
-        viewGrammar.style.display = 'flex';
-        viewTranslate.style.display = 'none';
-        langSelect.style.display = 'block';
-        editor.focus();
-      } else {
-        tabBtnGrammar.classList.remove('active');
-        tabBtnTranslate.classList.add('active');
-        viewGrammar.style.display = 'none';
-        viewTranslate.style.display = 'flex';
-        langSelect.style.display = 'none';
-        transSource.focus();
-        runTranslation();
-      }
-    }
-
-    tabBtnGrammar.addEventListener('click', () => switchTab('grammar'));
-    tabBtnTranslate.addEventListener('click', () => switchTab('translate'));
 
     function updateTranslateCounts() {
       const srcLen = (transSource.value || "").length;
@@ -1263,6 +1810,7 @@ Their is no doubt that this tool is very helpfull.</textarea>
 
       transLoading.style.display = 'flex';
       const startTime = performance.now();
+      const useAi = checkUseAiTrans ? checkUseAiTrans.checked : true;
 
       try {
         const res = await fetch('/api/translate', {
@@ -1271,7 +1819,8 @@ Their is no doubt that this tool is very helpfull.</textarea>
           body: JSON.stringify({
             text: text,
             from: sourceLangSelect.value,
-            to: targetLangSelect.value
+            to: targetLangSelect.value,
+            use_ai: useAi
           })
         });
         const data = await res.json();
@@ -1287,7 +1836,8 @@ Their is no doubt that this tool is very helpfull.</textarea>
           detectedLangPill.style.display = 'none';
         }
 
-        transSpeedLabel.innerText = `Translated in ${duration}s (100% offline)`;
+        const engineName = data.engine === 'phi3' ? "✨ Phi-3-Mini AI" : "Argos Neural";
+        transSpeedLabel.innerText = `Translated in ${duration}s (${engineName} • 100% offline)`;
       } catch (err) {
         console.error("Translation error:", err);
         transSpeedLabel.innerText = "Translation error";
@@ -1298,11 +1848,14 @@ Their is no doubt that this tool is very helpfull.</textarea>
 
     transSource.addEventListener('input', () => {
       clearTimeout(transTimeout);
-      transTimeout = setTimeout(() => runTranslation(), 250);
+      transTimeout = setTimeout(() => runTranslation(), 300);
     });
 
     sourceLangSelect.addEventListener('change', () => runTranslation());
     targetLangSelect.addEventListener('change', () => runTranslation());
+    if (checkUseAiTrans) {
+      checkUseAiTrans.addEventListener('change', () => runTranslation());
+    }
 
     // Swap Languages button
     document.getElementById('btn-swap-langs').addEventListener('click', () => {
@@ -1367,12 +1920,15 @@ Their is no doubt that this tool is very helpfull.</textarea>
       });
     });
 
-    // Initial load & periodic permission polling
+    // Initial load & periodic permission / AI status polling
     window.addEventListener('DOMContentLoaded', () => {
       updateStats();
+      updateRewriteCounts();
       checkPermissionsStatus();
+      checkAIStatus();
       runGrammarCheck();
       setInterval(checkPermissionsStatus, 2000);
+      setInterval(checkAIStatus, 5000);
     });
   </script>
 </body>

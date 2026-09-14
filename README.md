@@ -58,17 +58,28 @@ cd OpenGrammarly
 - Press **`Command + Option + G`** (or **`Command + Shift + G`**).
 - OpenGrammarly instantly auto-corrects spelling, punctuation, and grammar mistakes directly in place and shows a clean confirmation banner.
 
-### 3. ✍️ Native macOS Desktop App
+### 3. ✨ Local AI Styles & Tone (Phi-3-Mini SLM)
+- Powered by **Microsoft Phi-3-Mini** running 100% locally via Ollama with native Apple Silicon Metal acceleration.
+- **5 Writing Styles**:
+  - **👔 Formal**: Executive and polished correspondence without artificial filler.
+  - **💬 Casual**: Warm, friendly, and natural conversational tone.
+  - **✂️ Concise**: Punchy and direct, removing fluff while preserving meaning.
+  - **🦁 Confident**: Assertive, eliminating passive voice and hesitation.
+  - **🎓 Academic**: Articulate and scholarly flow with advanced vocabulary.
+- **1-Click Actions**: Instant Copy, Editor Insertion, or **"🎯 Paste to Active App"**.
+
+### 4. ✍️ Native macOS Desktop App & Translator
 - **Grammar & Style Editor**: Real-time mistake detection, spell checking, and one-click **"⚡ Auto-Fix All"**.
 - **🌐 DeepL-Style Dual-Panel Translator**:
+  - **✨ Phi-3-Mini Neural Engine**: Context-aware, human-level phrasing for English, Spanish, French, German, Italian, Portuguese, Arabic, and more.
   - Automatic source language detection.
-  - Bidirectional instant offline translation powered by local CTranslate2 neural networks.
   - **`⇄` Swap Languages** & **`📑 1-Click Copy`**.
   - **`🎯 Paste to Active App`**: Translates and pastes directly into whichever app you were working in (WhatsApp, Slack, Notes, Word, etc.).
 
-### 4. 🧩 Browser Extension (WhatsApp Web, Slack, Gmail, Notion)
+### 5. 🧩 Browser Extension (WhatsApp Web, Slack, Gmail, Notion)
 - Native floating widget inside Chromium browsers (**Google Chrome, Brave, Edge**).
-- **1-Click WhatsApp In-Place Fix**: Fixes mistakes or translates entire messages directly inside the WhatsApp Web chat box without duplicating or losing cursor focus.
+- **1-Click WhatsApp In-Place Fix**: Fixes mistakes directly inside the WhatsApp Web compose bar without duplicating or losing cursor focus.
+- **1-Click AI Style Chips**: Rewrite chat messages on the fly (`[ 👔 Formal ]`, `[ 💬 Casual ]`, `[ ✂️ Concise ]`, `[ 🦁 Confident ]`).
 - **1-Click In-Page Translation**: Quick target language chips (`[ 🇪🇸 ES ]`, `[ 🇫🇷 FR ]`, `[ 🇩🇪 DE ]`, `[ 🇸🇦 AR ]`, `[ 🇬🇧 EN ]`).
 
 ---
@@ -85,7 +96,7 @@ cd OpenGrammarly
    ```text
    OpenGrammarly-Extension
    ```
-   *(Or click **"🧩 Chrome Extension"** inside OpenGrammarly to open it directly).*
+   *(Or click **"🧩 Chrome Extension"** inside OpenGrammarly to reveal it directly).*
 5. You're done! A floating indicator will now appear whenever you type in WhatsApp Web, Slack, Gmail, or any text field.
 
 ---
@@ -93,29 +104,31 @@ cd OpenGrammarly
 ## 🔒 Privacy & Offline Guarantee
 
 - **Zero Cloud APIs**: All grammar checking runs against your local LanguageTool server on `localhost:8081`.
-- **Zero External Translation Calls**: Translation weights run directly on your Mac's Apple Silicon / Intel CPU via CTranslate2.
-- **Works Without Internet**: Once installed, you can turn off Wi-Fi completely and OpenGrammarly will continue checking grammar and translating seamlessly.
+- **Zero External AI Calls**: Phi-3-Mini and Argos Translate run 100% locally and offline on your Mac's hardware (Apple Silicon Metal GPU / Intel CPU).
+- **Clipboard Safety**: Your normal clipboard copy (`⌘C`) is never intercepted or altered. Fixing is strictly on-demand.
+- **Works Without Internet**: Once installed, you can turn off Wi-Fi completely and OpenGrammarly will continue checking grammar, rewriting styles, and translating seamlessly.
 
 ---
 
 ## 🛠️ Architecture & Tech Stack
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                   OpenGrammarly                       │
-├──────────────────────────┬─────────────────────────────┤
-│   Desktop PyWebView App  │   Chromium Extension        │
-│   (HTML5 / Modern Dark)  │   (Content Script + Worker) │
-└─────────────┬────────────┴──────────────┬──────────────┘
-              │                           │
-              ▼                           ▼
-┌────────────────────────────────────────────────────────┐
-│     Local Proxy & Translation API (localhost:8082)     │
-├──────────────────────────┬─────────────────────────────┤
-│  LanguageTool (8081)     │  Argos Translate            │
-│  - Spelling & Grammar    │  - CTranslate2 Engine       │
-│  - Multi-language rules  │  - Local Neural Weights     │
-└──────────────────────────┴─────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                             OpenGrammarly                              │
+├──────────────────────────────┬─────────────────────────────────────────┤
+│    Desktop PyWebView App     │        Chromium Extension               │
+│    (HTML5 / Modern Dark)     │        (Content Script + Service Worker)│
+└──────────────┬───────────────┴────────────────────┬────────────────────┘
+               │                                    │
+               ▼                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│               Local REST Engine (localhost:8082)                       │
+├───────────────────────┬────────────────────────────┬───────────────────┤
+│ LanguageTool (8081)   │ Phi-3-Mini SLM (11434)     │ Argos Translate   │
+│ - Spelling & Grammar  │ - Metal GPU Acceleration   │ - CTranslate2     │
+│ - Multi-language rules│ - Multi-Style Rewriting    │ - Fallback Engine │
+│                       │ - Neural Translation       │                   │
+└───────────────────────┴────────────────────────────┴───────────────────┘
 ```
 
 ---
@@ -123,3 +136,4 @@ cd OpenGrammarly
 ## 📄 License
 
 MIT License. Free and open-source for personal and commercial use.
+

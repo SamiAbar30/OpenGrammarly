@@ -84,7 +84,7 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 echo -e "${YELLOW}⚡ Installing required dependencies (pywebview, argostranslate, ctranslate2, pynput, pyobjc)...${NC}"
-python3 -m pip install --quiet --upgrade pywebview argostranslate ctranslate2 torch pynput pyobjc-framework-Cocoa pyobjc-framework-Quartz langdetect
+python3 -m pip install --quiet --upgrade --break-system-packages pywebview argostranslate ctranslate2 torch pynput pyobjc-framework-Cocoa pyobjc-framework-Quartz langdetect 2>/dev/null || python3 -m pip install --quiet --upgrade pywebview argostranslate ctranslate2 torch pynput pyobjc-framework-Cocoa pyobjc-framework-Quartz langdetect
 
 # macOS Python SSL certificate check
 CERT_CMD=$(ls /Applications/Python*/Install\ Certificates.command 2>/dev/null | head -n 1 || true)
@@ -94,7 +94,7 @@ if [[ -n "$CERT_CMD" ]]; then
 fi
 
 # Step 4: Pre-install Neural Translation Models (Argos Translate)
-echo -e "${BLUE}[4/6] Pre-installing offline translation models (EN, ES, FR, DE, AR, IT, PT)...${NC}"
+echo -e "${BLUE}[4/7] Pre-installing offline translation models (EN, ES, FR, DE, AR, IT, PT)...${NC}"
 python3 -c "
 import argostranslate.package
 print('Checking local translation packages...')
@@ -115,8 +115,22 @@ except Exception as e:
     print('Warning: Translation model download will continue in background:', e)
 " || true
 
-# Step 5: Install Desktop App to /Applications
-echo -e "${BLUE}[5/6] Installing OpenGrammarly.app to /Applications...${NC}"
+# Step 5: Setup Local AI Engine (Phi-3-Mini via Ollama)
+echo -e "${BLUE}[5/7] Setting up Local AI Engine (Phi-3-Mini via Ollama)...${NC}"
+if ! command -v ollama &>/dev/null; then
+    echo -e "${YELLOW}⚡ Installing Ollama for local neural rewriting & high-accuracy translation...${NC}"
+    brew install ollama || true
+fi
+
+if command -v ollama &>/dev/null; then
+    echo -e "${YELLOW}⚡ Starting Ollama background service...${NC}"
+    brew services start ollama || true
+    echo -e "${YELLOW}⚡ Pulling Phi-3-Mini model (lightweight, ~2GB, fast local SLM)...${NC}"
+    ollama pull phi3:mini || true
+fi
+
+# Step 6: Install Desktop App to /Applications
+echo -e "${BLUE}[6/7] Installing OpenGrammarly.app to /Applications...${NC}"
 if [[ -d "$DIR/OpenGrammarly.app" ]]; then
     rm -rf /Applications/OpenGrammarly.app
     cp -R "$DIR/OpenGrammarly.app" /Applications/
@@ -130,8 +144,8 @@ else
     exit 1
 fi
 
-# Step 6: Launch and Finish
-echo -e "${BLUE}[6/6] Launching OpenGrammarly...${NC}"
+# Step 7: Launch and Finish
+echo -e "${BLUE}[7/7] Launching OpenGrammarly...${NC}"
 if [[ -d "/Applications/OpenGrammarly.app" ]]; then
     open /Applications/OpenGrammarly.app
 else

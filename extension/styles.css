@@ -153,6 +153,59 @@
   color: white;
 }
 
+/* ✨ AI Style Rewrite Section */
+.gl-ai-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gl-ai-badge {
+  font-size: 10px;
+  background: rgba(168, 85, 247, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.gl-style-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gl-chip-style {
+  background: #283548;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gl-chip-style:hover {
+  background: #334155;
+  border-color: #a855f7;
+  color: #d8b4fe;
+  transform: translateY(-1px);
+}
+
+.gl-chip-style.gl-rewriting {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* 🌐 DeepL-like Translation Section */
 .gl-translate-section {
   border-top: 1px solid rgba(255, 255, 255, 0.08);

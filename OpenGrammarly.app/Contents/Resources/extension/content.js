@@ -512,6 +512,23 @@
     const rect = el.getBoundingClientRect();
     repositionPopover(rect);
 
+    function renderAISmartSection() {
+      return `
+        <div class="gl-ai-section">
+          <div class="gl-translate-header">
+            <span class="gl-translate-title" style="color: #c084fc;">✨ AI Tone & Rewrite</span>
+            <span class="gl-ai-badge">Phi-3-Mini</span>
+          </div>
+          <div class="gl-style-chips">
+            <button class="gl-chip-style" data-style="formal">👔 Formal</button>
+            <button class="gl-chip-style" data-style="casual">💬 Casual</button>
+            <button class="gl-chip-style" data-style="concise">✂️ Concise</button>
+            <button class="gl-chip-style" data-style="confident">🦁 Confident</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderTranslateSection() {
       return `
         <div class="gl-translate-section">
@@ -538,6 +555,7 @@
           <span class="gl-title">✨ All clear</span>
         </div>
         <div style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">No spelling or grammar errors detected.</div>
+        ${renderAISmartSection()}
         ${renderTranslateSection()}
       `;
     } else {
@@ -568,11 +586,45 @@
           <button class="gl-btn-fix-all" id="gl-btn-fix-all">⚡ Fix All</button>
         </div>
         ${itemsHtml}
+        ${renderAISmartSection()}
         ${renderTranslateSection()}
       `;
     }
 
     popover.style.display = "flex";
+  }
+
+  function rewriteAndReplace(style, btnEl) {
+    if (isFixing) return;
+    const el = getResolvedTarget();
+    if (!el) return;
+    const currentText = getElementText(el);
+    if (!currentText || !currentText.trim()) return;
+    isFixing = true;
+
+    if (btnEl) {
+      btnEl.classList.add("gl-rewriting");
+      btnEl.innerText = "Rewriting...";
+    }
+
+    chrome.runtime.sendMessage(
+      { action: "ai_rewrite", text: currentText, style: style },
+      (response) => {
+        if (response && response.rewritten) {
+          console.log(`[OpenGrammarly] Rewritten (${style}):`, response.rewritten);
+          popover.style.display = "none";
+          replaceTextInElement(el, response.rewritten, () => {
+            checkActiveText();
+          });
+        } else {
+          isFixing = false;
+          if (btnEl) {
+            btnEl.classList.remove("gl-rewriting");
+            btnEl.innerText = "Error";
+          }
+        }
+      }
+    );
   }
 
   function translateAndReplace(targetLang, btnEl) {
@@ -623,6 +675,13 @@
     if (fixSingleBtn) {
       const idx = parseInt(fixSingleBtn.getAttribute("data-idx"), 10);
       fixSingleMatch(idx);
+      return;
+    }
+
+    const styleChip = e.target.closest(".gl-chip-style");
+    if (styleChip) {
+      const style = styleChip.getAttribute("data-style");
+      rewriteAndReplace(style, styleChip);
       return;
     }
 

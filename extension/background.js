@@ -39,11 +39,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const text = request.text || "";
     const fromCode = request.from || "auto";
     const toCode = request.to || "es";
+    const useAi = request.use_ai !== false;
 
     fetch("http://127.0.0.1:8082/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text, from: fromCode, to: toCode })
+      body: JSON.stringify({ text: text, from: fromCode, to: toCode, use_ai: useAi })
     })
       .then((res) => res.json())
       .then((data) => {
@@ -51,6 +52,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })
       .catch((err) => {
         sendResponse({ success: false, error: err.toString(), translated: text });
+      });
+
+    return true;
+  }
+
+  if (request.action === "ai_rewrite") {
+    const text = request.text || "";
+    const style = request.style || "formal";
+
+    fetch("http://127.0.0.1:8082/api/ai/rewrite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, style: style })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        sendResponse({ success: true, ...data });
+      })
+      .catch((err) => {
+        sendResponse({ success: false, error: err.toString(), rewritten: text });
       });
 
     return true;

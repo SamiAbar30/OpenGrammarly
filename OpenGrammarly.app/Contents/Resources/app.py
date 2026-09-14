@@ -29,6 +29,11 @@ except ImportError:
     translate_engine = None
 
 try:
+    import ai_engine
+except ImportError:
+    ai_engine = None
+
+try:
     import AppKit
     import Quartz
 except Exception:
@@ -369,6 +374,14 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode("utf-8"))
             return
 
+        if path == "/api/ai/status":
+            res = ai_engine.check_ai_status() if ai_engine else {"ollama_running": False, "model_installed": False}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+            return
+
         # Static assets
         if path in ("/", "/index.html"):
             file_path = os.path.join(UI_DIR, "index.html")
@@ -422,10 +435,56 @@ class GrammarlyHTTPHandler(http.server.BaseHTTPRequestHandler):
             text = payload.get("text", "")
             from_code = payload.get("from", "auto")
             to_code = payload.get("to", "es")
+            use_ai = payload.get("use_ai", True)
+
+            # 1. Try Phi-3-Mini neural translation if available
+            if use_ai and ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                res = ai_engine.ai_translate(text, to_code, from_code)
+                if res.get("status") == "success":
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps(res).encode("utf-8"))
+                    return
+
+            # 2. Fallback to Argos Translate
             if translate_engine:
                 res = translate_engine.translate_text(text, from_code, to_code)
             else:
                 res = {"translated": text, "error": "Translation engine unavailable", "status": "error"}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+
+        elif self.path == "/api/ai/rewrite":
+            text = payload.get("text", "")
+            style = payload.get("style", "all")
+            if not ai_engine:
+                res = {"error": "AI engine module unavailable", "status": "error"}
+            elif style == "all":
+                res = ai_engine.rewrite_all_styles(text)
+            else:
+                res = ai_engine.rewrite_style(text, style)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+
+        elif self.path == "/api/ai/fix":
+            text = payload.get("text", "")
+            if ai_engine and ai_engine.is_ollama_running() and ai_engine.get_active_model():
+                res = ai_engine.ai_fix_grammar(text)
+            else:
+                fixed, count = auto_correct_text(text)
+                res = {"original": text, "fixed": fixed, "count": count, "fallback": True, "status": "success"}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+
+        elif self.path == "/api/ai/setup":
+            res = ai_engine.install_phi3_async() if ai_engine else {"status": "error", "error": "AI engine missing"}
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -496,34 +555,9 @@ def start_server():
         print("Server start error:", e)
 
 
-def _clipboard_monitor():
-    last_clip = ""
-    try:
-        last_clip = subprocess.check_output(["pbpaste"], text=True)
-    except Exception:
-        pass
-
-    while True:
-        try:
-            clip = subprocess.check_output(["pbpaste"], text=True)
-            if clip and clip != last_clip and len(clip.strip()) > 3:
-                last_clip = clip
-                fixed, count = auto_correct_text(clip)
-                if count > 0 and fixed != clip:
-                    last_clip = fixed
-                    p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
-                    p.communicate(fixed)
-                    subprocess.run(
-                        [
-                            "osascript",
-                            "-e",
-                            f'display notification "✨ Auto-fixed {count} error(s) in clipboard!" with title "OpenGrammarly"',
-                        ],
-                        check=False,
-                    )
-        except Exception:
-            pass
-        time.sleep(0.8)
+# NOTE: Automatic background clipboard hijacking is intentionally disabled.
+# Normal Cmd+C copy will NEVER be modified or corrupted.
+# Text fixing is strictly on-demand via Cmd+Option+G or UI.
 
 
 def _simulate_cmd_key(keycode: int):
@@ -790,11 +824,7 @@ def main():
     t_server = threading.Thread(target=start_server, daemon=True)
     t_server.start()
 
-    # 3. Start clipboard monitor thread
-    t_clip = threading.Thread(target=_clipboard_monitor, daemon=True)
-    t_clip.start()
-
-    # 4. Start global hotkey daemon (Cmd+Alt+G / Cmd+Shift+G)
+    # 3. Start global hotkey daemon (Cmd+Alt+G / Cmd+Shift+G)
     start_global_hotkey_daemon()
 
     # 5. Start floating pill daemon

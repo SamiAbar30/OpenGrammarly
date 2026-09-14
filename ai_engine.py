@@ -12,7 +12,7 @@ import urllib.request
 
 OLLAMA_HOST = "http://127.0.0.1:11434"
 MODEL_NAME = "qwen2.5:1.5b"
-ALT_MODEL_NAMES = ["phi3:mini", "phi3", "qwen2.5:0.5b", "llama3.2:1b", "llama3.2:3b"]
+ALT_MODEL_NAMES = ["qwen2.5:3b", "phi3:mini", "llama3.2:3b", "qwen2.5:0.5b"]
 
 logger = logging.getLogger("OpenGrammarlyAI")
 

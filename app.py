@@ -975,9 +975,9 @@ def main():
     window = webview.create_window(
         title="OpenGrammarly",
         url=f"http://127.0.0.1:{PORT}",
-        width=1040,
+        width=1080,
         height=720,
-        min_size=(880, 580),
+        min_size=(740, 500),
         text_select=True,
     )
 

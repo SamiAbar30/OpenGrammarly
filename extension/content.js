@@ -8,6 +8,46 @@
   let checkTimeout = null;
   let isFixing = false; // Flag to prevent synthetic events from creating recursive feedback loops
 
+  let userConfig = {
+    badgeEnabled: true,
+    disabledHosts: []
+  };
+
+  function loadConfig(callback) {
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(["badgeEnabled", "disabledHosts"], (res) => {
+          userConfig.badgeEnabled = res.badgeEnabled !== false;
+          userConfig.disabledHosts = res.disabledHosts || [];
+          if (callback) callback();
+        });
+      }
+    } catch (e) {}
+  }
+  loadConfig();
+
+  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.action === "config_updated") {
+        loadConfig(() => {
+          if (!isExtensionEnabledForCurrentPage()) {
+            badge.style.display = "none";
+            popover.style.display = "none";
+          } else {
+            updateBadgePosition();
+          }
+        });
+      }
+    });
+  }
+
+  function isExtensionEnabledForCurrentPage() {
+    if (!userConfig.badgeEnabled) return false;
+    const host = window.location.hostname;
+    if (userConfig.disabledHosts && userConfig.disabledHosts.includes(host)) return false;
+    return true;
+  }
+
   // Create badge element
   const badge = document.createElement("div");
   badge.className = "gl-badge";
@@ -202,7 +242,7 @@
   }
 
   function updateBadgePosition() {
-    if (!activeElement || !document.contains(activeElement)) {
+    if (!isExtensionEnabledForCurrentPage() || !activeElement || !document.contains(activeElement)) {
       badge.style.display = "none";
       popover.style.display = "none";
       return;
@@ -733,6 +773,21 @@
       true
     );
   });
+
+  document.addEventListener(
+    "focusout",
+    (e) => {
+      setTimeout(() => {
+        const current = findInputElement(document.activeElement);
+        if (!current) {
+          badge.style.display = "none";
+          popover.style.display = "none";
+          activeElement = null;
+        }
+      }, 150);
+    },
+    true
+  );
 
   window.addEventListener("scroll", updateBadgePosition, true);
   window.addEventListener("resize", updateBadgePosition);

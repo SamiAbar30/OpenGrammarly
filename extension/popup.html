@@ -3,64 +3,291 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    :root {
+      --bg: #090d16;
+      --card: #131929;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --emerald: #10b981;
+      --accent: #6366f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      width: 240px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
-      margin: 0;
+      width: 290px;
+      padding: 18px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
     }
     .header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
+      justify-content: space-between;
+      margin-bottom: 14px;
     }
-    .header img {
-      width: 28px;
-      height: 28px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .brand img {
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
     }
     .title {
       font-weight: 700;
       font-size: 14px;
+      letter-spacing: -0.3px;
     }
-    .status {
+    .badge-v {
+      font-size: 9.5px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .status-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+    }
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
       font-size: 12px;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.12);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
+      font-weight: 600;
     }
     .dot {
-      width: 6px;
-      height: 6px;
-      background: #10b981;
+      width: 7px;
+      height: 7px;
+      background: var(--emerald);
       border-radius: 50%;
+      box-shadow: 0 0 8px var(--emerald);
     }
-    .desc {
-      font-size: 11px;
-      color: #94a3b8;
-      line-height: 1.4;
+    .dot.offline {
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+    .model-tag {
+      font-size: 10.5px;
+      color: #c084fc;
+      font-weight: 600;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+    .toggle-info h5 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .toggle-info p {
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    /* Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      transition: .2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: .2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(14px);
+    }
+    .footer-note {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 10.5px;
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: var(--muted);
+      font-size: 10px;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <img src="icon.png" alt="OpenGrammarly">
-    <span class="title">OpenGrammarly</span>
+    <div class="brand">
+      <img src="icon.png" alt="Logo">
+      <span class="title">OpenGrammarly</span>
+    </div>
+    <span class="badge-v">Extension</span>
   </div>
-  <div class="status">
-    <span class="dot"></span>
-    <span>Local Engine Connected</span>
+
+  <div class="status-card">
+    <div class="status-left">
+      <span class="dot" id="status-dot"></span>
+      <span id="status-text">Desktop Engine Active</span>
+    </div>
+    <span class="model-tag" id="model-tag">Qwen 2.5</span>
   </div>
-  <p class="desc">
-    Checking text across all websites automatically. Powered by your local offline LanguageTool server.
-  </p>
+
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <h5>Floating Badge</h5>
+      <p>Show check icon inside text fields</p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggle-badge" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <h5>Enable on this site</h5>
+      <p id="current-site-label">Active on all sites</p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggle-site" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="footer-note">
+    <span>Global Mac Shortcut:</span>
+    <span class="kbd">⌘⌥G</span>
+  </div>
+
+  <script>
+    const toggleBadge = document.getElementById('toggle-badge');
+    const toggleSite = document.getElementById('toggle-site');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const modelTag = document.getElementById('model-tag');
+    const currentSiteLabel = document.getElementById('current-site-label');
+
+    let currentHost = "";
+
+    // Check current active tab hostname
+    if (chrome.tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs[0] && tabs[0].url) {
+          try {
+            const url = new URL(tabs[0].url);
+            currentHost = url.hostname;
+            currentSiteLabel.innerText = currentHost ? currentHost : "Active on all sites";
+
+            // Check if disabled for this host
+            chrome.storage.local.get(['disabledHosts', 'badgeEnabled'], (res) => {
+              const disabledHosts = res.disabledHosts || [];
+              toggleSite.checked = !disabledHosts.includes(currentHost);
+              toggleBadge.checked = res.badgeEnabled !== false;
+            });
+          } catch(e) {}
+        }
+      });
+    }
+
+    // Toggle badge globally
+    toggleBadge.addEventListener('change', () => {
+      chrome.storage.local.set({ badgeEnabled: toggleBadge.checked }, () => {
+        notifyTabsOfConfig();
+      });
+    });
+
+    // Toggle current site
+    toggleSite.addEventListener('change', () => {
+      if (!currentHost) return;
+      chrome.storage.local.get(['disabledHosts'], (res) => {
+        let disabledHosts = res.disabledHosts || [];
+        if (toggleSite.checked) {
+          disabledHosts = disabledHosts.filter(h => h !== currentHost);
+        } else {
+          if (!disabledHosts.includes(currentHost)) disabledHosts.push(currentHost);
+        }
+        chrome.storage.local.set({ disabledHosts }, () => {
+          notifyTabsOfConfig();
+        });
+      });
+    });
+
+    function notifyTabsOfConfig() {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(t => {
+          try {
+            chrome.tabs.sendMessage(t.id, { action: "config_updated" }, () => {
+              if (chrome.runtime.lastError) {}
+            });
+          } catch(e) {}
+        });
+      });
+    }
+
+    // Check desktop backend status
+    fetch("http://127.0.0.1:8082/api/ai/status")
+      .then(res => res.json())
+      .then(data => {
+        if (data.ollama_running && data.model_installed) {
+          statusDot.className = "dot";
+          statusText.innerText = "Desktop App Online";
+          modelTag.innerText = (data.active_model || "Qwen 2.5").split(':')[0];
+        } else {
+          statusDot.className = "dot offline";
+          statusText.innerText = "LanguageTool Only";
+          modelTag.innerText = "Rules Mode";
+        }
+      })
+      .catch(() => {
+        statusDot.className = "dot offline";
+        statusText.innerText = "App Not Running";
+        modelTag.innerText = "Offline";
+      });
+  </script>
 </body>
 </html>
